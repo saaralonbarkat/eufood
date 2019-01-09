@@ -35,6 +35,7 @@ knitr::opts_chunk$set(eval = TRUE,
 ```{r}
 library(tidyverse)
 library(sjPlot)
+library(textclean)
 ```
 
 
@@ -64,7 +65,9 @@ eu.trans.food <- eu.trans.food %>%
   mutate(info.food = str_detect(info.en.1,foodwords) %>% as.integer(),
         id.trans.new = 1:nrow(eu.trans.food)) %>% 
   rename(id.trans = id,
-         organization.name.trans.raw = name)
+         organization.name.trans.raw = name,
+         organization.section.trans = organization.section,
+         organization.subsection.trans = organization.subsection)
 
 
 eu.trans.food$info.food %>% sjmisc::frq()
@@ -78,8 +81,8 @@ t1 <- str_split(eu.trans.food$organization.name.trans.raw,"\\(", simplify = TRUE
   select(organization.name.trans=X1,
          organization.acronym.trans=X2) %>%
   mutate(organization.acronym.trans = str_remove(organization.acronym.trans,"\\)")) %>% 
-  mutate(organization.name.trans.clean = organization.name.trans %>% tolower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/|the|of|and",""),
-         organization.acronym.trans.clean = organization.acronym.trans %>% tolower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/| europe| international",""))
+  mutate(organization.name.trans.clean = organization.name.trans %>% replace_non_ascii() %>%  str_to_lower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/|the|of|and",""),
+         organization.acronym.trans.clean = organization.acronym.trans %>% replace_non_ascii() %>%  str_to_lower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/| europe| international",""))
 
 eu.trans.food <- eu.trans.food %>% 
   mutate(organization.acronym.trans = t1$organization.acronym.trans,
@@ -94,8 +97,8 @@ rm(t1)
 Cleaning presons names.
 ```{r}
 tt1<- eu.trans.food %>%
-  mutate(person.head.name.clean = person.head.name %>% tolower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/",""),
-         person.eu.name.clean = person.eu.name %>% tolower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/|the|of|and",""))
+  mutate(person.head.name.clean = person.head.name %>% replace_non_ascii() %>% str_to_lower() %>% str_replace_all("\\W",""),
+         person.eu.name.clean = person.eu.name %>% replace_non_ascii() %>% str_to_lower() %>% str_replace_all("\\W|the|of|and",""))
 
 ```
 
@@ -115,13 +118,13 @@ t2<- t1$X2 %>%
 
 eu.trans.food <- eu.trans.food %>% 
   mutate(trans.url.short = t2$trans.url.short) %>% 
-  mutate(trans.url.short.clean = trans.url.short %>% tolower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/|@|http:|https:",""))
+  mutate(trans.url.short.clean = trans.url.short %>% str_to_lower() %>% str_replace_all("\\W|@|http:|https:",""))
 
 #Extracting url domains
 
 t1 <- str_split(eu.trans.food$url,"http://|https://|www.", simplify = TRUE) %>% 
   data.frame() %>% 
-  mutate(url.trans.domain.t = paste0(X2,X3)) 
+  mutate(url.trans.domain.t = str_c(X2,X3)) 
 
 t2 <- str_split(t1$url.trans.domain.t,"\\.", simplify = TRUE) %>% 
   data.frame() %>% 
@@ -129,7 +132,7 @@ t2 <- str_split(t1$url.trans.domain.t,"\\.", simplify = TRUE) %>%
 
 eu.trans.food <- eu.trans.food %>% 
   mutate(url.trans.domain = t2$url.trans.domain) %>% 
-  mutate(url.trans.domain.clean = url.trans.domain %>% tolower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/|@|http:|https:",""))
+  mutate(url.trans.domain.clean = url.trans.domain %>% str_to_lower() %>% str_replace_all("\\W|@|http:|https:",""))
 ```
 
 
@@ -169,9 +172,9 @@ efsaweb<- efsaweb_raw %>%
          meeting.date.efsaweb = DATE,
          meeting.url.efsaweb = URL) %>% 
   
-  mutate(participant.name.efsaweb.clean = participant.name.efsaweb %>% tolower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/",""),
-         organization.name.efsaweb.clean = organization.name.efsaweb %>% tolower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/|the|of|and",""),
-         organization.acronym.efsaweb.clean = organization.acronym.efsaweb %>% tolower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/",""))%>% 
+  mutate(participant.name.efsaweb.clean = participant.name.efsaweb %>% str_to_lower() %>% str_replace_all("\\W",""),
+         organization.name.efsaweb.clean = organization.name.efsaweb %>% str_to_lower() %>% str_replace_all("\\W|the|of|and",""),
+         organization.acronym.efsaweb.clean = organization.acronym.efsaweb %>% str_to_lower() %>% str_replace_all("\\W",""))%>% 
   
   arrange(organization.name.efsaweb.clean, 
           participant.name.efsaweb.clean) %>% 
@@ -190,17 +193,17 @@ efsaweb <- efsaweb %>%
     mutate(participant.first.name.efsaweb = word(participant.name.efsaweb,1),
          participant.last.name.efsaweb = word(participant.name.efsaweb,-1)) %>% 
 
-    mutate(participant.first.name.efsaweb.clean = tolower(participant.first.name.efsaweb) %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/",""),
-         participant.last.name.efsaweb.clean = tolower(participant.last.name.efsaweb) %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/",""))
+    mutate(participant.first.name.efsaweb.clean = tolower(participant.first.name.efsaweb) %>% str_replace_all("\\W",""),
+         participant.last.name.efsaweb.clean = tolower(participant.last.name.efsaweb) %>% str_replace_all("\\W",""))
 ```
 
 Creating acronyms of participant names:
 ```{r}
 t1 <- str_split(efsaweb$participant.name.efsaweb," |-", simplify = TRUE) %>% 
   data.frame() %>% 
-mutate_all(funs(str_sub(.,1,1) %>% tolower())) %>% 
-  mutate(participant.name.acronym.efsaweb.v1 = paste0(X1,X2,X3,X4,X5)) %>% 
-  mutate(participant.name.acronym.efsaweb.v2 = paste0(str_sub(participant.name.acronym.efsaweb.v1,1,1),
+mutate_all(funs(str_sub(.,1,1) %>% str_to_lower())) %>% 
+  mutate(participant.name.acronym.efsaweb.v1 = str_c(X1,X2,X3,X4,X5)) %>% 
+  mutate(participant.name.acronym.efsaweb.v2 = str_c(str_sub(participant.name.acronym.efsaweb.v1,1,1),
                                               str_sub(participant.name.acronym.efsaweb.v1,-1,-1)))
 
 
@@ -219,8 +222,8 @@ efsa.stakeholders <- read_csv("C:/SAAR/UNIVERSITY/R/eufood/sample building/data/
   rename(organization.name.stakeholders = ORGANIZATION,
          acronym.stakeholders = Acronym) %>%
   
-  mutate(organization.name.stakeholders.clean = organization.name.stakeholders %>% tolower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|the|of|and",""),
-         organization.acronym.stakeholders.clean = acronym.stakeholders %>% tolower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’","")) %>% 
+  mutate(organization.name.stakeholders.clean = organization.name.stakeholders %>% str_to_lower() %>% str_replace_all("\\W|the|of|and",""),
+         organization.acronym.stakeholders.clean = acronym.stakeholders %>% str_to_lower() %>% str_replace_all("\\W","")) %>% 
   mutate(id.efsa.stakeholders = 1:nrow(efsa.stakeholders))
 
 ```
@@ -258,12 +261,8 @@ t1.2 <- efsa.stakeholders.1 %>%
 efsa.stakeholders.1 <- bind_rows(t1.1,t1.2) %>% 
   arrange(id.efsa.stakeholders)%>% 
   mutate(url = ifelse(url %in% NA,url.manual,as.character(url))) %>% 
-  mutate(url.clean = tolower(url) %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/|@|http:|https:","")) %>% 
-  select(-info.en,
-         -acronym.1,
-         -orgname.1,
-         -n.fields.bi,
-         -manual.match.id)
+  mutate(url.clean = tolower(url) %>% str_replace_all("\\W|@|http:|https:","")) 
+
 
 
 #rm(t1,t1.1,t1.2)
@@ -286,13 +285,13 @@ t2<- t1$X2 %>%
 
 efsa.stakeholders.1 <- efsa.stakeholders.1 %>% 
   mutate(trans.url.short = t2$trans.url.short) %>% 
-  mutate(trans.url.short.clean = trans.url.short %>% tolower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/|@|http:|https:",""))
+  mutate(trans.url.short.clean = trans.url.short %>% str_to_lower() %>% str_replace_all("\\W|@|http:|https:",""))
 
 #Extracting url domains
 
 t1 <- str_split(efsa.stakeholders.1$url,"http://|https://|www.", simplify = TRUE) %>% 
   data.frame() %>% 
-  mutate(url.trans.domain.t = paste0(X2,X3)) 
+  mutate(url.trans.domain.t = str_c(X2,X3)) 
 
 t2 <- str_split(t1$url.trans.domain.t,"\\.", simplify = TRUE) %>% 
   data.frame() %>% 
@@ -300,7 +299,7 @@ t2 <- str_split(t1$url.trans.domain.t,"\\.", simplify = TRUE) %>%
 
 efsa.stakeholders.1 <- efsa.stakeholders.1 %>% 
   mutate(url.trans.domain = t2$url.trans.domain) %>% 
-  mutate(url.trans.domain.clean = url.trans.domain %>% tolower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/|@|http:|https:",""))
+  mutate(url.trans.domain.clean = url.trans.domain %>% str_to_lower() %>% str_replace_all("\\W|@|http:|https:",""))
 ```
 
 
@@ -424,7 +423,7 @@ t1.1 <- efsa.stakeholders.1 %>%
          trans.url.short,
          trans.url.short.clean) %>%
   distinct(trans.url.short,.keep_all = T) %>% 
-  mutate(url.new.short.1 = paste0("'","http://",trans.url.short,"',"))
+  mutate(url.new.short.1 = str_c("'","http://",trans.url.short,"',"))
 
 
 #from participants list
@@ -432,15 +431,15 @@ t1.2 <- efsaweb.2 %>%
   drop_na(url) %>% 
   select(url) %>%
   distinct(url) %>% 
-  mutate(url.1 = paste0("'",url,"',"),
-         url.clean = tolower(url) %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/|@|http:|https:","")) 
+  mutate(url.1 = str_c("'",url,"',"),
+         url.clean = tolower(url) %>% str_replace_all("\\W|@|http:|https:","")) 
 
 
 t1.3 <- eu.trans.food.filter %>% 
   select(trans.url.short,
          trans.url.short.clean) %>%
   distinct(trans.url.short,.keep_all = T) %>% 
-  mutate(trans.url.short.1 = paste0("'","http://",trans.url.short,"',")) 
+  mutate(trans.url.short.1 = str_c("'","http://",trans.url.short,"',")) 
 
 
 
@@ -455,6 +454,24 @@ t11.1 <- t1.3 %>% anti_join(t2,by=c("trans.url.short.clean"="url.escraper.clean"
 
 write_csv(t1.2,"C:/SAAR/UNIVERSITY/R/eufood/sample building/data/efsa website/urls.csv")
 
+
+files.df <- files %>% data.frame() %>%  
+    mutate(url.escraper=str_replace_all(files.df[,1],"_email_addresses.csv","")) %>% 
+  mutate(url.escraper.clean = url.escraper %>% str_to_lower() %>% str_replace_all("\\W|@|http:|https:","")) 
+
+
+files.df %>% 
+  distinct(url.escraper.clean)
+
+
+
+#Checking whether url exists
+t11.1 <- t1.3 %>% anti_join(files.df,by=c("trans.url.short.clean"="url.escraper.clean")) %>% 
+  write_csv("C:/SAAR/UNIVERSITY/R/eufood/sample building/data/efsa website/urlstoscrape_1.csv")
+
+
+files.df %>% filter(str_detect(url.escraper,"anamob"))
+
 ```
 
 
@@ -466,11 +483,13 @@ creating a list of emails from email scraper
 files <- list.files(path = "C:/SAAR/UNIVERSITY/R/eufood/sample building/data/email_scrape_files/")
 f <- list()
 for (i in 1:length(files)) {
-  f[[i]] <- read_csv(paste0("C:/SAAR/UNIVERSITY/R/eufood/sample building/data/email_scrape_files/",files[i])) %>% 
-  mutate(url.escraper=str_split(files[i],"_email_addresses.csv")[[1]][1])
-  }
+  f[[i]] <- read_csv(str_c("C:/SAAR/UNIVERSITY/R/eufood/sample building/data/email_scrape_files/",files[i])) %>% 
+  mutate(url.escraper=str_replace_all(files[i],"_email_addresses.csv",""))}
+           
+
 
 #Binding all files to 1 table 
+
 
 emails <- bind_rows(f)%>%
   data.frame() %>%  
@@ -478,13 +497,26 @@ emails <- bind_rows(f)%>%
          url.email.escraper=X0,
          url.escraper) %>% 
   filter(str_detect(email.escraper,"DSC_")==FALSE,
-         str_sub(email.escraper,-3,-1)!="png") %>% 
-  mutate(email.escraper = email.escraper %>% tolower(),
-    url.escraper.clean = url.escraper %>% tolower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/|@|http:|https:",""))
+         str_detect(email.escraper,"png$|jpg$|pdf$|jpeg$")==FALSE) %>% 
+  mutate(email.escraper = email.escraper %>% str_to_lower(),
+    url.escraper.clean = url.escraper %>% str_to_lower() %>% str_replace_all("\\W|@|http:|https:",""))
 
-#removing points at the end of emails
+
+tt1 <- c("20APng.","aajpG.","pdf","..jpeg")
+tt2 <- c("20APng.","aajpG.",NA,"..jpeg")
+
+
+str_replace(tt1,"^20|\\.$","")
+str_detect(tt1,"^[a-z]")
+tt1 %>% str_to_lower()
+str_c(tt1,str_replace_na(tt2,""))
+
+#removing points at the end of emails + "20" at the begining
 emails <- emails %>% 
-  mutate(email.escraper = ifelse(substr(email.escraper,nchar(email.escraper),nchar(email.escraper))==".",str_sub(email.escraper, 1, end=-2),email.escraper))
+  mutate(email.escraper = str_replace(email.escraper,"^20|\\.$","")) %>% 
+
+#removing all emails not starting with a letter
+    filter(str_detect(email.escraper,"^[a-z]"))
 
 #splitting the local part and the domain part of emails (before and after the @) 
 t1=str_split(emails$email.escraper,"@", simplify = TRUE) %>% 
@@ -498,10 +530,10 @@ t2 <- str_split(t1$domain,"\\.", simplify = TRUE) %>%
          rest=X2)
 
 emails <- emails %>% 
-  mutate(email.escraper.local.part = t1$local.part %>% tolower(),
-         email.escraper.domain = t2$domain %>% tolower()) %>% 
+  mutate(email.escraper.local.part = t1$local.part %>% str_to_lower(),
+         email.escraper.domain = t2$domain %>% str_to_lower()) %>% 
   distinct(url.escraper,email.escraper,.keep_all=T) %>% 
-  mutate(email.escraper.domain.clean = email.escraper.domain %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/|@","")) 
+  mutate(email.escraper.domain.clean = email.escraper.domain %>% str_replace_all("\\W|@","")) 
 
 rm(files,f,t1,t2)
 
@@ -512,7 +544,7 @@ t1=str_split(emails$url.escraper,"http://|https://", simplify = TRUE) %>%
 
 emails <- emails %>%
 mutate(url.escraper.domain = t1$.) %>% 
-mutate(url.escraper.domain.clean = url.escraper.domain %>% tolower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/|@|http:|https:|www","")) 
+mutate(url.escraper.domain.clean = url.escraper.domain %>% str_to_lower() %>% str_replace_all("\\W|@|http:|https:|www","")) 
 
 ```
 
@@ -529,9 +561,17 @@ emails %>%
 
 
 emails <- emails%>% 
-  mutate(email.general = str_detect(email.escraper.local.part,"info|contact|office|admin|international|mail|secretariat|secretary|post|media|press|media|enquiries|hello|webmaster|staff|kontakt|enquiries|membership") %>% as.numeric())
+  mutate(email.general = str_detect(email.escraper.local.part,"info|contact|office|admin|amministrazione|comunication|comunicacion|marketing|international|mail|secretar|segreter|sekretar|presiden|brussels|biuro|post|media|press|media|enquiries|hello|welcome|webmaster|staff|kontakt|enquiries|membership") %>% as.numeric())
 
-emails %>% filter(str_detect(url.escraper,"mercadona"))
+emails %>% filter(str_detect(url.escraper,"abbott"))
+emails %>% filter(str_detect(email.escraper,"20"))
+
+
+emails %>%
+  select(url.escraper) %>% 
+  n_distinct()
+  
+
 ```
 
 
@@ -634,9 +674,9 @@ email.manual.t <- email.manual %>%
 
 efsaweb.3 <- efsaweb.2 %>% select(-url.manual) %>%  
 left_join(email.manual.t,by="participant.name.efsaweb") %>%
-  mutate(email.person.manual = email.person.manual %>% tolower(),
-         url.manual = url.manual %>% tolower(),
-         url.trans = url %>% as.character() %>% tolower()) %>% 
+  mutate(email.person.manual = email.person.manual %>% str_to_lower(),
+         url.manual = url.manual %>% str_to_lower(),
+         url.trans = url %>% as.character() %>% str_to_lower()) %>% 
   mutate(url.new = ifelse(url.trans %in% NA,url.manual,url.trans)) %>% 
   select(participant.name.efsaweb,
          organization.name.efsaweb,
@@ -676,13 +716,13 @@ t2<- t1$X2 %>%
 
 efsaweb.3 <- efsaweb.3 %>% 
   mutate(url.new.short = t2$url.new.short) %>% 
-  mutate(url.new.short.clean = url.new.short %>% tolower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/|@|http:|https:",""))
+  mutate(url.new.short.clean = url.new.short %>% str_to_lower() %>% str_replace_all("\\W|@|http:|https:",""))
 
 #Extracting url domains
 
 t1 <- str_split(efsaweb.3$url.new.short,"http://|https://|www.", simplify = TRUE) %>% 
   data.frame() %>% 
-  mutate(url.new.domain.t = paste0(X1,X2)) 
+  mutate(url.new.domain.t = str_c(X1,X2)) 
 
 t2 <- str_split(t1$url.new.domain.t,"\\.", simplify = TRUE) %>% 
   data.frame() %>% 
@@ -690,7 +730,7 @@ t2 <- str_split(t1$url.new.domain.t,"\\.", simplify = TRUE) %>%
 
 efsaweb.3 <- efsaweb.3 %>% 
   mutate(url.new.domain = t2$url.new.domain) %>% 
-  mutate(url.new.domain.clean = url.new.domain %>% tolower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/|@|http:|https:",""))
+  mutate(url.new.domain.clean = url.new.domain %>% str_to_lower() %>% str_replace_all("\\W|@|http:|https:",""))
 ```
 
   
@@ -737,17 +777,17 @@ efsaweb.emails.general.1 <- efsaweb.3 %>%
 t1 <- efsaweb.emails.general.1 %>%
   filter(email.general.domain.match==1) %>% 
   group_by(organization.name.efsaweb) %>% 
-  summarise(email.general.str = paste(email.escraper, collapse = "; "))
+  summarise(email.general.str = str_c(email.escraper, collapse = "; "))
 
 t2 <- efsaweb.emails.general.1 %>%
   filter(email.domain.match==1,email.general==0) %>% 
   group_by(organization.name.efsaweb) %>% 
-  summarise(emails.domain.str = paste(email.escraper, collapse = "; "))
+  summarise(emails.domain.str = str_c(email.escraper, collapse = "; "))
 
 t3 <- efsaweb.emails.general.1 %>%
   filter(email.domain.match==0) %>% 
   group_by(organization.name.efsaweb) %>% 
-  summarise(emails.nondomain.str = paste(email.escraper, collapse = "; "))
+  summarise(emails.nondomain.str = str_c(email.escraper, collapse = "; "))
 
 t1 %>% nrow()  
 
@@ -819,6 +859,8 @@ efsa.stakeholders.emails.persons.1 <- efsa.stakeholders.1 %>%
          id.trans,
          organization.name.trans.raw,
          info.en.1,
+         organization.section.trans,
+         organization.subsection.trans,
          url,
          organization.acronym.trans,
          organization.name.trans,
@@ -848,8 +890,8 @@ efsa.stakeholders.emails.persons.1 <- efsa.stakeholders.emails.persons.1 %>%
   mutate(trans.person.first.name = word(trans.person.name,1),
          trans.person.last.name = word(trans.person.name,-1)) %>% 
 
-    mutate(trans.person.first.name.clean = trans.person.first.name %>% tolower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/",""),
-         trans.person.last.name.clean = trans.person.last.name %>% tolower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/",""))
+    mutate(trans.person.first.name.clean = trans.person.first.name %>% replace_non_ascii() %>% str_to_lower() %>% str_replace_all("\\W",""),
+         trans.person.last.name.clean = trans.person.last.name %>% replace_non_ascii() %>% str_to_lower() %>% str_replace_all("\\W",""))
 ```
 
 Creating acronyms of participant names:
@@ -857,9 +899,9 @@ Creating acronyms of participant names:
 #head
 t1 <- str_split(efsa.stakeholders.emails.persons.1$trans.person.name," |-", simplify = TRUE) %>% 
   data.frame() %>% 
-mutate_all(funs(str_sub(.,1,1) %>% tolower())) %>% 
-  mutate(trans.person.name.acronym.v1 = paste0(X1,X2,X3,X4,X5)) %>% 
-  mutate(trans.person.name.acronym.v2 = paste0(str_sub(trans.person.name.acronym.v1,1,1),
+mutate_all(funs(str_sub(.,1,1) %>% str_to_lower())) %>% 
+  mutate(trans.person.name.acronym.v1 = str_c(X1,X2,X3,X4,X5)) %>% 
+  mutate(trans.person.name.acronym.v2 = str_c(str_sub(trans.person.name.acronym.v1,1,1),
                                           str_sub(trans.person.name.acronym.v1,-1,-1)))
 
 
@@ -904,6 +946,8 @@ t1.1 <- efsa.stakeholders.emails.persons.1 %>%
          id.trans,
          organization.name.trans.raw,
          info.en.1,
+         organization.section.trans,
+         organization.subsection.trans,
          url,
          trans.url.short,
          trans.url.short.clean,
@@ -935,6 +979,8 @@ mutate(url.email.escraper = NA,
          id.trans,
          organization.name.trans.raw,
          info.en.1,
+         organization.section.trans,
+         organization.subsection.trans,
          url,
          trans.url.short,
          trans.url.short.clean,
@@ -989,6 +1035,8 @@ t1 <- efsa.stakeholders.emails.persons.1 %>%
          id.trans,
          organization.name.trans.raw,
          info.en.1,
+         organization.section.trans,
+         organization.subsection.trans,
          url,
          trans.url.short,
          trans.url.short.clean,
@@ -1008,17 +1056,17 @@ t1 <- efsa.stakeholders.emails.persons.1 %>%
 t1.1 <- t1 %>%
   filter(email.general.domain.match==1) %>% 
   group_by(organization.name.stakeholders) %>% 
-  summarise(email.general.str = paste(email.escraper, collapse = "; "))
+  summarise(email.general.str = str_c(email.escraper, collapse = "; "))
 
 t1.2 <- t1 %>%
   filter(email.domain.match==1,email.general==0) %>% 
   group_by(organization.name.stakeholders) %>% 
-  summarise(emails.domain.str = paste(email.escraper, collapse = "; "))
+  summarise(emails.domain.str = str_c(email.escraper, collapse = "; "))
 
 t1.3 <- t1 %>%
   filter(email.domain.match==0) %>% 
   group_by(organization.name.stakeholders) %>% 
-  summarise(emails.nondomain.str = paste(email.escraper, collapse = "; "))
+  summarise(emails.nondomain.str = str_c(email.escraper, collapse = "; "))
   
 
 efsa.stakeholders.emails.persons.2 <- efsa.stakeholders.emails.persons.2 %>% 
@@ -1055,10 +1103,7 @@ efsaweb.4 %>%
 ```
 
 
-
-
 ##transparency register
-
 
 tidy data - seperate row for each person
 ```{r}
@@ -1080,6 +1125,8 @@ eu.trans.food.filter.2 <- eu.trans.food.filter %>%
          id.trans,
          organization.name.trans.raw,
          info.en.1,
+         organization.section.trans,
+         organization.subsection.trans,
          url,
          organization.acronym.trans,
          organization.name.trans,
@@ -1103,31 +1150,79 @@ eu.trans.food.filter.2$trans.person.name %>%
 
 splitting first and last names:
 ```{r}
+#cleaning persons names before splitting
+eu.trans.food.filter.2 <- eu.trans.food.filter.2 %>%
+  mutate(trans.person.name.1 = str_replace_all(trans.person.name,"Dr. |Dr.|Prof. |Prof.|\\,","")) %>%
+    mutate(trans.person.name.1 = 
+             str_replace_all(trans.person.name.1,"  "," ")) %>%
+  mutate(trans.person.first.name = word(trans.person.name.1,1),
+         trans.person.last.name.t = word(trans.person.name.1,-1))
+
+#dealing with cases of two first names (e.g. Alon-Barkat) 
+t1.1 <- str_split(eu.trans.food.filter.2$trans.person.last.name.t,"-", simplify = TRUE) %>% 
+  data.frame() %>% 
+  mutate(trans.person.last.name.v1 = X1 %>% as.character(),
+         trans.person.last.name.v2 = X2 %>% as.character()) %>%
+  select(-X1,
+         -X2) %>% 
+  #mutate(trans.person.last.name.na = nchar(trans.person.last.name.v2)) %>% 
+  mutate(trans.person.last.name.v2 = ifelse(nchar(trans.person.last.name.v2)==0,NA,trans.person.last.name.v2))
+
 eu.trans.food.filter.2 <- eu.trans.food.filter.2 %>% 
+  mutate(trans.person.last.name.v1 = t1.1$trans.person.last.name.v1,
+         trans.person.last.name.v2 = t1.1$trans.person.last.name.v2) %>% 
 
-  mutate(trans.person.first.name = word(trans.person.name,1),
-         trans.person.last.name = word(trans.person.name,-1)) %>% 
+#cleaning first and last names
+    mutate(trans.person.first.name.clean = trans.person.first.name %>% replace_non_ascii() %>% str_to_lower() %>% str_replace_all("\\W",""),
+         trans.person.last.name.v1.clean = trans.person.last.name.v1 %>% replace_non_ascii() %>% str_to_lower() %>% str_replace_all("\\W",""),
+         trans.person.last.name.v2.clean = trans.person.last.name.v2 %>% replace_non_ascii() %>% str_to_lower() %>% str_replace_all("\\W",""))
 
-    mutate(trans.person.first.name.clean = trans.person.first.name %>% tolower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/|\\(|\\}|\\{",""),
-         trans.person.last.name.clean = trans.person.last.name %>% tolower() %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/|\\(|\\}|\\{",""))
+
+
+
+eu.trans.food.filter.2 %>%
+  distinct(trans.person.name,.keep_all=T) %>%
+  group_by(trans.person.first.name) %>% 
+  summarise(freq=n()) %>% 
+  arrange(desc(freq)) 
+
+eu.trans.food.filter.2 %>%
+  distinct(trans.person.name,.keep_all=T) %>%
+  group_by(trans.person.last.name.v1) %>% 
+  summarise(freq=n()) %>% 
+  arrange(desc(freq)) 
+
+eu.trans.food.filter.2 %>%
+  distinct(trans.person.name,.keep_all=T) %>%
+  group_by(trans.person.last.name.v2) %>% 
+  summarise(freq=n()) %>% 
+  arrange(desc(freq))
+
 ```
 
 Creating acronyms of participant names:
 ```{r}
-#head
-t1 <- str_split(eu.trans.food.filter.2$trans.person.name," |-", simplify = TRUE) %>% 
+
+t1 <- str_split(eu.trans.food.filter.2$trans.person.name.1," |-", simplify = TRUE) %>% 
   data.frame() %>% 
-mutate_all(funs(str_sub(.,1,1) %>% tolower())) %>% 
-  mutate(trans.person.name.acronym.v1 = paste0(X1,X2,X3,X4,X5)) %>% 
-  mutate(trans.person.name.acronym.v2 = paste0(str_sub(trans.person.name.acronym.v1,1,1),
+mutate_all(funs(str_sub(.,1,1) %>%  str_to_lower())) %>% 
+  mutate(trans.person.name.acronym.v1 = str_c(X1,X2,X3,X4,X5)) %>% 
+  mutate(trans.person.name.acronym.v2 = str_c(str_sub(trans.person.name.acronym.v1,1,1),
                                           str_sub(trans.person.name.acronym.v1,-1,-1)))
 
 
 eu.trans.food.filter.2 <- eu.trans.food.filter.2 %>% 
-  mutate(trans.person.name.acronym.v1 = t1$trans.person.name.acronym.v1 %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/|\\(|\\}|\\{",""),
-         trans.person.name.acronym.v2 = t1$trans.person.name.acronym.v2 %>% str_replace_all("\n| |,|'|\\.|\\?|-|’|\\/|\\(|\\}|\\{",""))
+  mutate(trans.person.name.acronym.v1 = t1$trans.person.name.acronym.v1 %>% replace_non_ascii() %>% str_replace_all("\\W",""),
+         trans.person.name.acronym.v2 = t1$trans.person.name.acronym.v2 %>% replace_non_ascii() %>% str_replace_all("\\W",""))
 
-rm(t1,t2)
+rm(t1)
+
+eu.trans.food.filter.2 %>%
+  #distinct(trans.person.first.name,.keep_all=T) %>%
+  group_by(trans.person.name.acronym.v1,
+           trans.person.name.acronym.v2) %>% 
+  summarise(freq=n()) %>% 
+  arrange(desc(freq))
 ```
 
 matching names:
@@ -1137,20 +1232,39 @@ t1.1 <- eu.trans.food.filter.2 %>%
   
   rowwise() %>% 
   mutate(email.domain.match = str_detect(trans.url.short.clean,email.escraper.domain.clean), 
-         email.last.name = str_detect(email.escraper.local.part,trans.person.last.name.clean),
+         email.last.name.v1 = str_detect(email.escraper.local.part,trans.person.last.name.v1.clean),
+         email.last.name.v2 = str_detect(email.escraper.local.part,trans.person.last.name.v2.clean),
          email.first.name = str_detect(email.escraper.local.part,trans.person.first.name.clean)) %>%
   mutate(email.name.acronym.v1 = str_detect(email.escraper.local.part,trans.person.name.acronym.v1),
-         email.name.acronym.v2 = str_detect(email.escraper.local.part,trans.person.name.acronym.v2)) %>% 
-  mutate(email.name.match = ifelse(email.last.name==T|
+         email.name.acronym.v2 = str_detect(email.escraper.local.part,trans.person.name.acronym.v2)) %>%
+  mutate(email.name.acronym = ifelse(nchar(email.escraper.local.part)<=4 &
+    (email.name.acronym.v1==T|email.name.acronym.v1==T),1,0)) %>% 
+  mutate(email.name.match = ifelse(email.general==0 &
+                          str_detect(email.escraper.local.part,email.escraper.domain)==F &
+                                     (email.last.name.v1==T|
+                                     email.last.name.v2==T|
                                      email.first.name==T|
-                                     email.name.acronym.v1==T&nchar(email.escraper.local.part)<=4|
-                                     email.name.acronym.v2==T&nchar(email.escraper.local.part)<=4,1,0)) %>%
+                                     email.name.acronym==1),1,0)) %>%
   
   distinct(trans.person.name,
            organization.name.trans.raw,
            email.escraper,.keep_all = T) %>% 
   
-  filter(email.name.match==T) %>% 
+  filter(email.name.match==1) %>%
+  
+  arrange(trans.person.name,
+         trans.person.type,
+         desc(email.last.name.v1),
+         desc(email.last.name.v2),
+         desc(email.first.name),
+         desc(email.domain.match)) %>% 
+  
+  group_by(trans.person.name) %>% 
+  summarise(email.person.str = str_c(email.escraper, collapse = "; "))
+  
+
+eu.trans.food.filter.3 <- eu.trans.food.filter.2 %>% 
+  left_join(t1.1) %>%  
 
   select(trans.person.name,
          trans.person.type,
@@ -1158,56 +1272,25 @@ t1.1 <- eu.trans.food.filter.2 %>%
          id.trans,
          organization.name.trans.raw,
          info.en.1,
+         organization.section.trans,
+         organization.subsection.trans,
          url,
          trans.url.short,
          trans.url.short.clean,
          url.trans.domain,
          url.trans.domain.clean,
-         url.email.escraper,
-         email.escraper,
-         email.domain.match,
-         email.name.match)
-  
+         email.person.str) %>% 
+    arrange(organization.name.trans.raw,
+          trans.person.type)
 
-  
-t1.2 <- eu.trans.food.filter.2 %>% 
-  anti_join(t1.1,
-            by=c("trans.person.name"="trans.person.name")) %>% 
-mutate(url.email.escraper = NA,
-      email.escraper = NA,
-      email.domain.match = NA,
-      email.name.match = NA) %>% 
-  select(trans.person.name,
-         trans.person.type,
-         job.descr,
-         id.trans,
-         organization.name.trans.raw,
-         info.en.1,
-         url,
-         trans.url.short,
-         trans.url.short.clean,
-         url.trans.domain,
-         url.trans.domain.clean,
-         url.email.escraper,
-         email.escraper,
-         email.domain.match,
-         email.name.match)  
-
-
-eu.trans.food.filter.3 <- bind_rows(t1.1,t1.2) %>%
-
-  arrange(organization.name.trans.raw,
-          trans.person.type) %>%
-  rename(person.email.escraper=email.escraper,
-         person.url.email.escraper=url.email.escraper) 
-  
   #write_csv("C:/SAAR/UNIVERSITY/R/eufood/sample building/data/efsa website/efsa.stakeholders_01.csv")
 
 t1.1$trans.person.name %>% n_distinct()
 eu.trans.food.filter.3 %>% 
   distinct(trans.person.name,.keep_all = T) %>% 
-  select(trans.person.name,person.email.escraper) %>% 
+  select(trans.person.name,email.person.str) %>% 
   drop_na()
+
 ```
 
 
@@ -1231,6 +1314,8 @@ t1 <- eu.trans.food.filter.2 %>%
          id.trans,
          organization.name.trans.raw,
          info.en.1,
+         organization.section.trans,
+         organization.subsection.trans,
          url,
          trans.url.short,
          trans.url.short.clean,
@@ -1250,17 +1335,17 @@ t1 <- eu.trans.food.filter.2 %>%
 t1.1 <- t1 %>%
   filter(email.general.domain.match==1) %>% 
   group_by(organization.name.trans.raw) %>% 
-  summarise(email.general.str = paste(email.escraper, collapse = "; "))
+  summarise(email.general.str = str_c(email.escraper, collapse = "; "))
 
 t1.2 <- t1 %>%
   filter(email.domain.match==1,email.general==0) %>% 
   group_by(organization.name.trans.raw) %>% 
-  summarise(emails.domain.str = paste(email.escraper, collapse = "; "))
+  summarise(emails.domain.str = str_c(email.escraper, collapse = "; "))
 
 t1.3 <- t1 %>%
   filter(email.domain.match==0) %>% 
   group_by(organization.name.trans.raw) %>% 
-  summarise(emails.nondomain.str = paste(email.escraper, collapse = "; "))
+  summarise(emails.nondomain.str = str_c(email.escraper, collapse = "; "))
   
 
 eu.trans.food.filter.3 <- eu.trans.food.filter.3 %>% 
@@ -1282,19 +1367,35 @@ eu.trans.food.filter.3 %>%
 
 
 ```{r}
-efsaweb.4$organization.name.efsaweb %>% 
+eu.trans.food.filter.3$organization.name.trans.raw %>% 
   n_distinct()
 
-efsaweb.4 %>%
-  drop_na(email.general.str) %>% 
-  select(organization.name.efsaweb) %>% 
+eu.trans.food.filter.3 %>%
+  drop_na(email.person.str) %>% 
+  select(organization.name.trans.raw) %>% 
   n_distinct()
 
-efsaweb.4 %>%
+eu.trans.food.filter.3 %>%
   drop_na(emails.domain.str) %>% 
-  select(organization.name.efsaweb) %>% 
+  select(organization.name.trans.raw) %>% 
   n_distinct()
 
 ```
 
+calculating differences accross organization types
+```{r}
+eu.trans.food.filter.3 <- eu.trans.food.filter.3 %>% 
+  mutate(email.person.bi = ifelse(email.person.str %in% NA,0,1),
+         general.email.bi = ifelse(email.general.str %in% NA,0,1))
+
+#personal emails
+eu.trans.food.filter.3 %>%
+  group_by(organization.section.trans) %>% 
+  summarise(n.orgs = n_distinct(organization.name.trans.raw),
+            n.persons = n_distinct(trans.person.name),
+            n.persons.emails = sum(email.person.bi),
+            n.general.emails = sum(general.email.bi)) %>% 
+  mutate(percent.persons.emails = round((n.persons.emails/n.persons),2),
+         percent.general.emails = round((n.general.emails/n.orgs),2))
+```
 
