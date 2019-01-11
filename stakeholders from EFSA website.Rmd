@@ -885,127 +885,124 @@ efsa.stakeholders.emails.persons.1$trans.person.name %>%
 
 splitting first and last names:
 ```{r}
+#cleaning persons names before splitting
+efsa.stakeholders.emails.persons.1 <- efsa.stakeholders.emails.persons.1 %>%
+  mutate(trans.person.name.1 = str_replace_all(trans.person.name,"Dr. |Dr.|Prof. |Prof.|\\,","")) %>%
+    mutate(trans.person.name.1 = 
+             str_replace_all(trans.person.name.1,"  "," ")) %>%
+  mutate(trans.person.first.name = word(trans.person.name.1,1),
+         trans.person.last.name.t = word(trans.person.name.1,-1))
+
+#dealing with cases of two first names (e.g. Alon-Barkat) 
+t1.1 <- str_split(efsa.stakeholders.emails.persons.1$trans.person.last.name.t,"-", simplify = TRUE) %>% 
+  data.frame() %>% 
+  mutate(trans.person.last.name.v1 = X1 %>% as.character(),
+         trans.person.last.name.v2 = X2 %>% as.character()) %>%
+  select(-X1,
+         -X2) %>% 
+  #mutate(trans.person.last.name.na = nchar(trans.person.last.name.v2)) %>% 
+  mutate(trans.person.last.name.v2 = ifelse(nchar(trans.person.last.name.v2)==0,NA,trans.person.last.name.v2))
+
 efsa.stakeholders.emails.persons.1 <- efsa.stakeholders.emails.persons.1 %>% 
+  mutate(trans.person.last.name.v1 = t1.1$trans.person.last.name.v1,
+         trans.person.last.name.v2 = t1.1$trans.person.last.name.v2) %>% 
 
-  mutate(trans.person.first.name = word(trans.person.name,1),
-         trans.person.last.name = word(trans.person.name,-1)) %>% 
-
+#cleaning first and last names
     mutate(trans.person.first.name.clean = trans.person.first.name %>% replace_non_ascii() %>% str_to_lower() %>% str_replace_all("\\W",""),
-         trans.person.last.name.clean = trans.person.last.name %>% replace_non_ascii() %>% str_to_lower() %>% str_replace_all("\\W",""))
+         trans.person.last.name.v1.clean = trans.person.last.name.v1 %>% replace_non_ascii() %>% str_to_lower() %>% str_replace_all("\\W",""),
+         trans.person.last.name.v2.clean = trans.person.last.name.v2 %>% replace_non_ascii() %>% str_to_lower() %>% str_replace_all("\\W",""))
 ```
 
 Creating acronyms of participant names:
 ```{r}
-#head
-t1 <- str_split(efsa.stakeholders.emails.persons.1$trans.person.name," |-", simplify = TRUE) %>% 
+
+t1 <- str_split(efsa.stakeholders.emails.persons.1$trans.person.name.1," |-", simplify = TRUE) %>% 
   data.frame() %>% 
-mutate_all(funs(str_sub(.,1,1) %>% str_to_lower())) %>% 
-  mutate(trans.person.name.acronym.v1 = str_c(X1,X2,X3,X4,X5)) %>% 
+mutate_all(funs(str_sub(.,1,1) %>%  str_to_lower())) %>% 
+  mutate(trans.person.name.acronym.v1 = str_c(X1,X2,X3,X4)) %>% 
   mutate(trans.person.name.acronym.v2 = str_c(str_sub(trans.person.name.acronym.v1,1,1),
                                           str_sub(trans.person.name.acronym.v1,-1,-1)))
 
 
 efsa.stakeholders.emails.persons.1 <- efsa.stakeholders.emails.persons.1 %>% 
-  mutate(trans.person.name.acronym.v1 = t1$trans.person.name.acronym.v1,
-         trans.person.name.acronym.v2 = t1$trans.person.name.acronym.v2)
+  mutate(trans.person.name.acronym.v1 = t1$trans.person.name.acronym.v1 %>% replace_non_ascii() %>% str_replace_all("\\W",""),
+         trans.person.name.acronym.v2 = t1$trans.person.name.acronym.v2 %>% replace_non_ascii() %>% str_replace_all("\\W",""))
 
 rm(t1,t2)
 ```
 
 matching names:
 ```{r}
-t1.1 <- efsa.stakeholders.emails.persons.1 %>% 
+t1.1 <- efsa.stakeholders.emails.persons.1 %>%  
   left_join(emails,by=c("trans.url.short.clean"="url.escraper.clean")) %>%
   
   rowwise() %>% 
   mutate(email.domain.match = str_detect(trans.url.short.clean,email.escraper.domain.clean), 
-         email.last.name = str_detect(email.escraper.local.part,trans.person.last.name.clean),
-         email.first.name = str_detect(email.escraper.local.part,trans.person.first.name.clean),
-         email.name.acronym.v1 = str_detect(email.escraper.local.part,trans.person.name.acronym.v1),
-         email.name.acronym.v2 = str_detect(email.escraper.local.part,trans.person.name.acronym.v2)) %>% 
-  mutate(email.name.match = ifelse(email.last.name==T|
+         email.last.name.v1 = str_detect(email.escraper.local.part,trans.person.last.name.v1.clean),
+         email.last.name.v2 = str_detect(email.escraper.local.part,trans.person.last.name.v2.clean),
+         email.first.name = str_detect(email.escraper.local.part,trans.person.first.name.clean)) %>%
+  mutate(email.name.acronym.v1 = str_detect(email.escraper.local.part,trans.person.name.acronym.v1),
+         email.name.acronym.v2 = str_detect(email.escraper.local.part,trans.person.name.acronym.v2)) %>%
+  mutate(email.name.acronym = ifelse(nchar(email.escraper.local.part)<=4 &
+    (email.name.acronym.v1==T|email.name.acronym.v1==T),1,0)) %>% 
+  mutate(email.name.match = ifelse(email.general==0 &
+                          str_detect(email.escraper.local.part,email.escraper.domain)==F &
+                                     (email.last.name.v1==T|
+                                     email.last.name.v2==T|
                                      email.first.name==T|
-                                     email.name.acronym.v1==T&nchar(email.escraper.local.part)<=4|
-                                     email.name.acronym.v2==T&nchar(email.escraper.local.part)<=4,1,0)) %>%
+                                     email.name.acronym==1),1,0)) %>%
   
   distinct(trans.person.name,
            organization.name.stakeholders,
            email.escraper,.keep_all = T) %>% 
   
-  filter(email.name.match==T) %>% 
-
-  select(organization.name.stakeholders,
-         acronym.stakeholders,
-         trans.person.name,
-         trans.person.type,
-         job.descr,
-         organization.type.stakeholders,
-         organization.name.stakeholders.clean,
-         organization.acronym.stakeholders.clean,
-         id.efsa.stakeholders,
-         id.trans,
-         organization.name.trans.raw,
-         info.en.1,
-         organization.section.trans,
-         organization.subsection.trans,
-         url,
-         trans.url.short,
-         trans.url.short.clean,
-         url.trans.domain,
-         url.trans.domain.clean,
-         url.email.escraper,
-         email.escraper,
-         email.domain.match,
-         email.name.match)
+  filter(email.name.match==1) %>%
   
-
-  
-t1.2 <- efsa.stakeholders.emails.persons.1 %>% 
-  anti_join(t1.1,
-            by=c("trans.person.name"="trans.person.name")) %>% 
-mutate(url.email.escraper = NA,
-      email.escraper = NA,
-      email.domain.match = NA,
-      email.name.match = NA) %>% 
-  select(organization.name.stakeholders,
-         acronym.stakeholders,
-         trans.person.name,
-         trans.person.type,
-         job.descr,
-         organization.type.stakeholders,
-         organization.name.stakeholders.clean,
-         organization.acronym.stakeholders.clean,
-         id.efsa.stakeholders,
-         id.trans,
-         organization.name.trans.raw,
-         info.en.1,
-         organization.section.trans,
-         organization.subsection.trans,
-         url,
-         trans.url.short,
-         trans.url.short.clean,
-         url.trans.domain,
-         url.trans.domain.clean,
-         url.email.escraper,
-         email.escraper,
-         email.domain.match,
-         email.name.match)  
-
-
-efsa.stakeholders.emails.persons.2 <- bind_rows(t1.1,t1.2) %>%
-
   arrange(organization.name.stakeholders,
-          trans.person.type) %>%
-  rename(person.email.escraper=email.escraper,
-         person.url.email.escraper=url.email.escraper) 
+         trans.person.type,
+         desc(email.last.name.v1),
+         desc(email.last.name.v2),
+         desc(email.first.name),
+         desc(email.domain.match)) %>% 
   
-  #write_csv("C:/SAAR/UNIVERSITY/R/eufood/sample building/data/efsa website/efsa.stakeholders_01.csv")
+  group_by(trans.person.name) %>% 
+  summarise(email.person.str = str_c(email.escraper, collapse = "; "))
+
+
+efsa.stakeholders.emails.persons.2 <- efsa.stakeholders.emails.persons.1 %>% 
+  left_join(t1.1) %>%  
+
+  select(organization.name.stakeholders,
+         acronym.stakeholders,
+         trans.person.name,
+         trans.person.type,
+         job.descr,
+         id.efsa.stakeholders,
+         id.trans,
+         organization.name.trans.raw,
+         info.en.1,
+         organization.section.trans,
+         organization.subsection.trans,
+         url,
+         trans.url.short,
+         trans.url.short.clean,
+         url.trans.domain,
+         url.trans.domain.clean,
+         email.person.str) %>% 
+    arrange(organization.name.trans.raw,
+          trans.person.type)
+
+
 
 t1.1$trans.person.name %>% n_distinct()
+
+efsa.stakeholders.emails.persons.2$trans.person.name %>% n_distinct()
+
 efsa.stakeholders.emails.persons.2 %>% 
   distinct(trans.person.name,.keep_all = T) %>% 
-  select(trans.person.name,person.email.escraper) %>% 
+  select(trans.person.name,email.person.str) %>% 
   drop_na()
+
 ```
 
 
@@ -1085,22 +1082,25 @@ efsa.stakeholders.emails.persons.2 %>% select(organization.name.stakeholders,ema
 
 ```
 
-
+Joining with participants:
 ```{r}
-efsaweb.4$organization.name.efsaweb %>% 
-  n_distinct()
+t1 <- efsaweb.4 %>% 
+  select(participant.name.efsaweb,
+         organization.name.efsaweb,
+         id.efsa.stakeholders,
+         email.person.manual,
+         email.general.manual) %>% 
+  group_by(id.efsa.stakeholders) %>% 
+  summarise(participant.name.efsaweb.str = str_c(participant.name.efsaweb,collapse = "; "),
+    email.person.manual.efsaweb.str = str_c(email.person.manual,collapse = "; "),
+             email.general.manual.efsaweb.str = str_c(email.general.manual,collapse = "; "))
 
-efsaweb.4 %>%
-  drop_na(email.general.str) %>% 
-  select(organization.name.efsaweb) %>% 
-  n_distinct()
-
-efsaweb.4 %>%
-  drop_na(emails.domain.str) %>% 
-  select(organization.name.efsaweb) %>% 
-  n_distinct()
-
+efsa.stakeholders.emails.persons.3 <- efsa.stakeholders.emails.persons.2 %>% 
+  left_join(t1) %>%
+  mutate(efsaweb.participant.match = NA) %>% 
+  write_csv("C:/SAAR/UNIVERSITY/R/eufood/sample building/data/efsa website/efsa.stakeholders.emails_MANUAL_01.csv")
 ```
+
 
 
 ##transparency register
@@ -1143,6 +1143,19 @@ distinct(organization.name.trans.raw,
          .keep_all = T) %>% 
   arrange(organization.name.trans.raw,
           trans.person.type)
+
+
+t1 <- eu.trans.food.filter.2 %>% 
+  group_by(trans.person.name,
+           organization.name.trans.raw) %>% 
+  summarise(trans.person.type.str = str_c(trans.person.type, collapse = "; "))
+
+eu.trans.food.filter.2 <- eu.trans.food.filter.2 %>%
+  distinct(trans.person.name, organization.name.trans.raw,
+           .keep_all = T) %>% 
+  left_join(t1) %>% 
+  mutate(trans.person.type = trans.person.type.str)
+
 
 eu.trans.food.filter.2$trans.person.name %>%
   n_distinct()
@@ -1367,18 +1380,22 @@ eu.trans.food.filter.3 %>%
 
 
 ```{r}
+eu.trans.food.filter.3 %>% nrow()
+
 eu.trans.food.filter.3$organization.name.trans.raw %>% 
   n_distinct()
 
 eu.trans.food.filter.3 %>%
   drop_na(email.person.str) %>% 
-  select(organization.name.trans.raw) %>% 
+  select(trans.person.name) %>% 
   n_distinct()
 
 eu.trans.food.filter.3 %>%
   drop_na(emails.domain.str) %>% 
-  select(organization.name.trans.raw) %>% 
+  select(trans.person.name) %>% 
   n_distinct()
+
+eu.trans.food.filter.3$general.email.bi %>% table()
 
 ```
 
@@ -1396,6 +1413,147 @@ eu.trans.food.filter.3 %>%
             n.persons.emails = sum(email.person.bi),
             n.general.emails = sum(general.email.bi)) %>% 
   mutate(percent.persons.emails = round((n.persons.emails/n.persons),2),
-         percent.general.emails = round((n.general.emails/n.orgs),2))
+         percent.general.emails = round((n.general.emails/n.persons),2))
+
+eu.trans.food.filter.3 %>%
+  group_by(organization.section.trans,
+           organization.subsection.trans) %>% 
+  summarise(n.orgs = n_distinct(organization.name.trans.raw),
+            n.persons = n_distinct(trans.person.name),
+            n.persons.emails = sum(email.person.bi),
+            n.general.emails = sum(general.email.bi)) %>% 
+  mutate(percent.persons.emails = round((n.persons.emails/n.persons),2),
+         percent.general.emails = round((n.general.emails/n.persons),2))
+
+           
 ```
 
+
+#Power group
+
+efsaweb (participants from meetings)
+```{r}
+efsaweb.4 %>% names()
+
+t1 <- efsaweb.4 %>% 
+  select(person.name = participant.name.efsaweb,
+         person.descr = title.person.manual,
+         organization.name = organization.name.efsaweb,
+         organization.name.trans.raw,
+         id.efsa.stakeholders,
+         id.trans,
+         url.trans,
+         url.manual,
+         email.person = email.person.manual,
+         email.general.str,
+         linkedin.manual) %>% 
+  mutate(organization.url = ifelse(url.trans %in% NA,url.manual,url.trans),
+         source = "participant",
+         trans.person.type = NA) %>% 
+  select(-url.trans,
+         -url.manual)
+
+t1 %>% names()
+```
+
+registered stakeholders
+```{r}
+efsa.stakeholders.emails.manual <- read_csv("C:/SAAR/UNIVERSITY/R/eufood/sample building/data/efsa website/efsaweb_stakeholders_emails_MANUAL_coded.csv")
+
+efsa.stakeholders.emails.manual %>% names()
+
+t2 <- efsa.stakeholders.emails.manual %>% 
+  select(trans.person.name,
+         person.name.maunal,
+         trans.person.type,
+         job.descr,
+         person.title.manual,
+         organization.name = organization.name.stakeholders,
+         organization.name.trans.raw,
+         id.efsa.stakeholders,
+         id.trans,
+         organization.url = url,
+         email.person = email.person.manual.1,
+         email.general.str,
+         email.general.manual.12,
+         efsaweb.participant.match) %>% 
+  mutate(person.name = ifelse(trans.person.name %in% NA,person.name.maunal,trans.person.name),
+         person.descr = ifelse(job.descr %in% NA,person.title.manual,job.descr),
+         email.general.str = ifelse(email.general.str %in% NA,email.general.manual.12,email.general.str),
+         linkedin.manual = NA) %>%
+  filter(efsaweb.participant.match==0) %>% 
+  mutate(source = "registered stakeholders") 
+  
+t2.1 <- t2 %>% 
+  group_by(person.name,
+           organization.name) %>% 
+  summarise(trans.person.type.str = str_c(trans.person.type, collapse = "; ") %>% na_if("missing"))
+
+t2 <- t2 %>%
+  distinct(person.name, organization.name,
+           .keep_all = T) %>% 
+  left_join(t2.1) %>% 
+  mutate(trans.person.type = trans.person.type.str) %>% 
+  .[,t1 %>% names] 
+```
+
+combining
+```{r}
+power.group.emails.1 <- rbind(t1,t2) 
+
+t1 <- power.group.emails.1 %>% 
+  distinct(organization.url,
+           email.general.str) %>% 
+  rename(email.general.str.1 = email.general.str) %>% 
+  group_by(organization.url) %>% 
+  summarise(email.general.str.2 = str_c(email.general.str.1,collapse = "; "))
+
+power.group.emails.2 <- power.group.emails.1 %>% 
+  left_join(t1) %>% 
+  mutate(email.general.str = ifelse(email.general.str==email.general.str.2,email.general.str,email.general.str.2)) %>% 
+  select(-email.general.str.2)%>% 
+  write_csv("C:/SAAR/UNIVERSITY/R/eufood/sample building/data/efsa website/power.group.emails.1.csv")
+```
+
+
+manually adding a couple of general emails:
+```{r}
+t1 <- read_csv("C:/SAAR/UNIVERSITY/R/eufood/sample building/data/efsa website/power.group.emails.manualcoding.csv")
+
+power.group.emails.3 <- power.group.emails.2 %>% 
+  mutate(email.general.str = ifelse(email.general.str %in% NA,t1$email.general.manual,email.general.str)) %>%
+  distinct(person.name,
+           organization.name,
+           .keep_all = T) %>% 
+    write_csv("C:/SAAR/UNIVERSITY/R/eufood/sample building/data/efsa website/power.group.emails.3.csv")
+
+#number personal emails found: 
+t1 = power.group.emails.3$email.person %>% n_distinct()
+t1
+#% found personal emails:
+t2 = t1/(power.group.emails.3 %>% nrow())
+t2 %>% round(3)
+#number personal/general emails found: 
+power.group.emails.3 %>% 
+  mutate(mail.bi = ifelse(email.person %in% NA &
+                            email.general.str %in% NA,0,1)) %>% 
+  select(mail.bi) %>% 
+  table()
+
+```
+
+
+```{r}
+t1 <- power.group.emails.3 %>% 
+  distinct(email.person) %>% 
+  rename(email.person.str=email.person)
+
+t2 <- eu.trans.food.filter.3 %>% 
+  distinct(email.person.str)
+
+t3 <- rbind(t1,t2)
+nrow(t3)-nrow(t1)
+```
+
+
+#END
