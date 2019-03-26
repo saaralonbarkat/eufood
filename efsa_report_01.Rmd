@@ -1,0 +1,592 @@
+---
+title: "SVIVA_experiment 2"
+author: "Saar Alon-Barkat"
+date: "January 2018"
+output:
+  html_document:
+    code_folding: hide
+    fig_captions: yes
+    highlight: haddock
+    number_sections: yes
+    theme: flatly
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+      toc_depth: 3
+  pdf_document:
+    toc: yes
+---
+
+
+
+Last update: `r Sys.time()`
+
+
+```{r set-global-options, echo = FALSE}
+knitr::opts_chunk$set(eval = TRUE, 
+                      echo = TRUE, 
+                      message=FALSE,
+                      cache = FALSE,
+                      include = TRUE,
+                      collapse = FALSE,
+                      dependson = NULL,
+                      engine = "R", # Chunks will always have R code, unless noted
+                      error = TRUE,
+                      fig.path="Figures/",  # Set the figure options
+                      fig.align = "center")
+```
+
+
+```{r silent-packages, echo = FALSE, eval = TRUE, message=FALSE, include = FALSE}
+library(sjPlot)
+library(tidyverse)
+library(car)
+library(reshape2)
+library(viridis)
+```
+
+
+```{r}
+source("efsa_dm_01.R")
+```
+
+#Survey
+
+##Independence treatment
+<br>
+**Control:**
+
+EFSA is a EU regulatory agency that was set up to be a source of advice and communication on risks associated with the food chain.       The agency was legally established in 2002 under the General Food Law - Regulation (EC) 178/2002. It is responsible for risk assessment and also has a duty to communicate its scientific findings to the public. 
+
+According to its founding regulation, EFSA is to “provide scientific advice and... support for the Community's legislation and policies” and is expected to “act in close collaboration with the Commission and the Member States to promote the necessary coherence in the risk communication process.” The regulation specifies EFSA´s legal mandate, as well as its organizational, financial, and regulatory arrangements. 
+   
+EFSA acknowledges the importance of the effective communication of its opinions to decision‐makers and the general public, and has developed specific policies for this purpose.         
+
+<br>
+
+**Treatment:** 
+
+EFSA is a EU regulatory agency that operates independently of the European Commission, the European Parliament, and the Member States.      
+According to its founding regulation (Regulation (EC) No 178/2002), EFSA is “to serve as a point of reference by virtue of its independence” and the members of its scientific committee and panels “shall undertake to act independently of any external influence”. The regulation establishes the agency's legal, financial, and regulatory independence. EFSA's opinions are based solely on judgments of independent scientists, without any intervention by the agency’s board or any other political bodies.      
+
+Moreover, EFSA explicitly acknowledges the independence of its experts, methods and data from any external influence as one of its key organizational values, and has developed specific policies to ensure their impartiality and neutrality.         
+
+<br>
+
+##Pesticide cases
+<br>
+**High risk (Amitrole):**
+
+In 2015, EFSA submitted its conclusion on the risk assessment of the pesticide "Amitrole", which has been widely used as a weedkiller in orchards, grapes, olives and for non-crop uses. EFSA was asked by the European Commission to evaluate the safety of this pesticide before making a decision about the renewal of its approval. 
+ 
+On the basis of the available data, EFSA identified critical areas of concern regarding the use of Amitrole. A high risk to operators, workers and bystanders from the use of Amitrole was identified. Additionally, EFSA concluded in its review that there is a high potential for groundwater exposure by toxic substances above the acceptable limit, as well as noting that Amitrole should be considered to have endocrine disrupting properties  (i.e. interferes with the hormone system). Finally, in its conclusion, it indicated that during the peer review it was proposed that Amitrole should be re-classified to a higher hazard category as “presumed human reproductive toxicant”. Substances are classified in this category when data provides clear evidence of an adverse effect for instance, on sexual function and fertility.  
+
+Based on EFSA's conclusions about these identified high risks, the pesticide Amitrole has been banned. 
+<br>
+
+**Low risk (Flupyradifurone):**
+
+<br>
+In 2015, EFSA submitted its conclusion on the risk assessment of the pesticide "Flupyradifurone", a new active substance, which has been developed for protecting various crops against insects such as aphids, hoppers and whiteflies. EFSA was asked by the European Commission to evaluate the safety of this pesticide before making a decision about its approval. 
+ 
+On the basis of the available data, EFSA concluded in its report that Flupyradifurone is not carcinogenic nor toxic for reproduction. It also noted that the conditions for the consideration of endocrine disrupting properties for human health (i.e. interferes with the hormone system) were not met. However, EFSA also noted that the information available was insufficient to entirely rule out the potential for endocrine disrupting effects of the pesticide. Also, it could not completely rule out the risk for consumers due to the unknown nature of residues that might be present in drinking water. In the end, EFSA did not propose to classify the pesticide as toxic, and concluded that it may be expected to fulfil the safety requirements laid down in the legislation. 
+ 
+Based on EFSA's conclusions, the pesticide Flupyradifurone has been approved.     
+
+
+<br>
+   
+
+
+##Outcome variables 
+
+**Credibility of decision:**
+
+* I believe that the opinion was based strictly on scientific considerations. [credibility.pest.q1 | Q9.2]
+
+* I believe that the opinion was influenced by political interests. [credibility.pest.q2 | Q9.3]
+
+* I believe that the opinion was affected by the industry interests. [credibility.pest.q3 | Q9.4]
+
+* I believe that the opinion was formed after evaluating all the relevant data and evidence. [credibility.pest.q4 | Q9.5]
+
+* I believe that the assessment of the evidence was based on adequate methods. [credibility.pest.q5 | Q9.6]
+
+* I believe that EFSA's opinion about the pesticide may change the next time it will be asked to reexamine it. [credibility.pest.q6 | Q9.7]
+
+<br>
+Credibility of efsa:
+* EFSA is a credible regulator. [credibility.efsa.post | Q10.4]
+
+<br>
+**Reputation of EFSA:**  
+
+* EFSA is a credible regulator [reputation.efsa.q1 | Q10.5]
+
+* EFSA's employees are highly skilled in their profession. [reputation.efsa.q2 | Q10.6]
+
+* EFSA's employees understand the problems and issues in the field. [reputation.efsa.q3 | Q10.7] 
+
+* EFSA cooperates well with experts in the field. [reputation.efsa.q4 | Q10.8]
+
+* EFSA sets new scientific standards. [reputation.efsa.q5 | Q10.9]
+
+* EFSA’s output is of high quality. [reputation.efsa.q6 | Q10.10]
+
+* EFSA is an effective organization. [reputation.efsa.q7 | Q10.11]
+
+* EFSA’s mission is ethically defensible (their mission is the right mission). [reputation.efsa.q8 | Q10.12]
+
+* EFSA has a positive influence on society. [reputation.efsa.q9 | Q10.13] 
+
+* Decision-making in EFSA follows due process. [reputation.efsa.q10 | Q10.14] 
+
+* EFSA follows correct procedures. [reputation.efsa.q11 | Q10.15] 
+
+* Please complete the following sentence: EFSA has a reputation for... [reputation.efsa.open | Q11.1]
+
+<br>
+
+#Data
+
+##Response rate
+```{r}
+n_invitations = 156
+n_errors = 6
+n_invitations_effective = n_invitations-n_errors
+```
+
+
+* Invitations sent to `r n_invitations` personal emails (followed by 2 reminders). `r n_errors` emails returned errors. 
+
+* `r efsa_raw %>% nrow()` participants started the survey (`r (((efsa_raw %>% nrow())/n_invitations_effective) %>% round(3))*100`% of effective invitations).
+
+* `r efsa_raw %>% filter(Q10.2>0) %>% nrow()` participants reached the question about EFSA independence (`r (((efsa_raw %>% filter(Q10.2>0) %>% nrow())/(efsa_raw %>% nrow())) %>% round(3))*100`% of those who started; `r (((efsa_raw %>% filter(Q10.2>0) %>% nrow())/n_invitations_effective) %>% round(3))*100`% of effective invitations).
+
+* `r efsa_raw %>% filter(Q13.13>0) %>% nrow()` participants finished the entire survey  (`r ((efsa_raw %>% filter(Q13.13>0) %>% nrow())/(efsa_raw_00 %>% nrow())) %>% round(2)` of those who started; `r (((efsa_raw %>% filter(Q13.13>0) %>% nrow())/n_invitations_effective) %>% round(3))*100`% of effective invitations).
+
+
+#Experimental conditions
+
+Treatment
+```{r}
+sjp.frq(efsa_00$treatment,
+        ylim = c(0,nrow(efsa_00)),
+        axis.labels = c("Control","Treatment"),
+        title = "Treatment")+ 
+  theme_classic()
+```
+
+
+Pesticide case
+```{r}
+
+sjp.frq(efsa_00$high.risk,
+        ylim = c(0,nrow(efsa_00)),
+        axis.labels = c("Low risk","High risk"),
+        title = "Pesticide case")+ 
+  theme_classic()
+
+```
+
+<br>
+
+**Randomization checks**
+
+```{r}
+sjstats::grpmean(efsa_00,
+        treatment,
+        female,
+        out="v")
+sjstats::grpmean(efsa_00,
+        high.risk,
+        female,
+        out="v")
+
+sjstats::grpmean(efsa_00,
+        treatment,
+        age,
+        out="v")
+sjstats::grpmean(efsa_00,
+        high.risk,
+        age,
+        out="v")
+
+sjstats::grpmean(efsa_00,
+        treatment,
+        organization.type.raw,
+        out="v")
+sjstats::grpmean(efsa_00,
+        high.risk,
+        organization.type.raw,
+        out="v")
+```
+
+
+
+
+#Descriptive statistics
+
+##Demographics
+
+**Age**
+
+[measured by 10 years intervals]
+
+<br>
+```{r}
+sjp.frq(efsa_00$age,
+        ylim = c(0,nrow(efsa_00)/2),
+        title = "Participant age group")+ 
+  theme_classic()
+```
+
+
+**Gender**
+<br>
+```{r}
+sjp.frq(efsa_00$female,
+        ylim = c(0,nrow(efsa_00)),
+        axis.labels = c("Male","Female"),
+        title = "Participant gender")+ 
+  theme_classic()
+```
+
+**Education**
+<br>
+```{r}
+sjp.frq(efsa_00$education,
+        ylim = c(0,nrow(efsa_00)),
+        title = "Participant education level")+ 
+  theme_classic()
+```
+<br>
+**Discipline**
+
+TBA
+
+<br>
+
+**Native language**
+
+```{r}
+select(efsa_00,1) %>%
+  mutate(native.language.english = ifelse(efsa_raw$Q13.7==1,1,NA),
+         native.language.French = ifelse(efsa_raw$Q13.8_1==1,1,NA),
+         native.language.German = ifelse(efsa_raw$Q13.8_2==1,1,NA),
+         native.language.Spanish = ifelse(efsa_raw$Q13.8_4==1,1,NA),
+         native.language.Italian = ifelse(efsa_raw$Q13.8_5==1,1,NA),
+         native.language.Dutch = ifelse(efsa_raw$Q13.8_6==1,1,NA),
+         native.language.Portuguese = ifelse(efsa_raw$Q13.8_7==1,1,NA),
+         native.language.other = efsa_raw$Q13.8_8_TEXT) ->
+    t1
+
+t2 <- data.frame(language = c("English",
+                                   "French",
+                                   "German",
+                                   "Spanish",
+                                   "Italian",
+                                   "Dutch",
+                                   "Portuguese",
+                                   "other")) %>% 
+  mutate(n = c(filter(t1,native.language.english==1) %>% nrow(),
+                        filter(t1,native.language.French==1) %>% nrow(),
+                        filter(t1,native.language.German==1) %>% nrow(),
+                        filter(t1,native.language.Spanish==1) %>% nrow(),
+                        filter(t1,native.language.Italian==1) %>% nrow(),
+                        filter(t1,native.language.Dutch==1) %>% nrow(),
+                        filter(t1,native.language.Portuguese==1) %>% nrow(),
+                        filter(t1,native.language.other !=0) %>% nrow())) %>% 
+  mutate(percentage = (n/nrow(t1)) %>% round(2))
+
+ggplot(t2,aes(reorder(language,n,desc),n))+
+  geom_bar(stat="identity",fill="dodgerblue2",alpha=0.8)+
+  scale_y_continuous(limits = c(0,nrow(t1)/4),breaks = 1:20)+
+  scale_x_discrete(name = "")+
+  coord_flip()+
+  theme_classic()
+```
+
+*Note: a participant may report more than one native language. 
+<br>
+
+Other langauges:
+```{r}
+filter(t1,!(native.language.other %in% c(0,1,NA)))$native.language.other %>% 
+  frq(out="v")
+```
+
+
+
+
+##Background about organizations
+
+**Policy domain**
+```{r}
+select(efsa_00,1) %>%
+  mutate(organization.area.1 = ifelse(efsa_raw$Q1.5_1==1,1,NA),
+         organization.area.2 = ifelse(efsa_raw$Q1.5_2==1,1,NA),
+         organization.area.3 = ifelse(efsa_raw$Q1.5_3==1,1,NA),
+         organization.area.4 = ifelse(efsa_raw$Q1.5_4==1,1,NA),
+         organization.area.5 = ifelse(efsa_raw$Q1.5_5==1,1,NA),
+         organization.area.6 = ifelse(efsa_raw$Q1.5_6==1,1,NA),
+         organization.area.other = efsa_raw$Q1.5_7_TEXT) ->
+  t1
+
+
+t2 <- data.frame(area = c("Environment",
+                                   "Telecommunications",
+                                   "Food and Agriculture",
+                                   "Health",
+                                   "Financial services",
+                                   "Energy",
+                                   "other")) %>% 
+  mutate(n = c(filter(t1,organization.area.1==1) %>% nrow(),
+                        filter(t1,organization.area.2==1) %>% nrow(),
+                        filter(t1,organization.area.3==1) %>% nrow(),
+                        filter(t1,organization.area.4==1) %>% nrow(),
+                        filter(t1,organization.area.5==1) %>% nrow(),
+                        filter(t1,organization.area.6==1) %>% nrow(),
+                        filter(t1,organization.area.other !=0) %>% nrow())) %>% 
+  mutate(percentage = (n/nrow(t1)) %>% round(2))
+
+
+ggplot(t2,aes(reorder(area,n,desc),n))+
+  geom_bar(stat="identity",fill="dodgerblue2",alpha=0.8)+
+  scale_y_continuous(breaks = seq(0,nrow(t1),5))+
+  scale_x_discrete(name = "")+
+  coord_flip()+
+  theme_classic()
+
+```
+<br>
+
+**Organization type**
+```{r}
+sjp.frq(efsa_00$organization.type.raw,
+        sort.frq = "desc",
+        axis.title = "Type",
+        ylim = c(0,nrow(efsa_00)/2),
+        title = "Organization type")+
+  #coord_flip()+
+  theme_classic()
+```
+
+
+<br>
+
+##Attitudes about EU institutions
+
+<br>
+To what extent do you trust the following EU institutions?
+<br>
+
+```{r}
+
+t0 = efsa_00 %>% 
+  mutate(ID1 = 1:nrow(efsa_00))
+
+t1=  melt(t0,id.vars="ID1",measure.vars = c("trust.eu.commission",
+                                            "trust.eu.parliament",
+                                            "trust.eu.council")) %>% 
+    mutate(variable = variable %>% Recode("'trust.eu.commission' = 'European Commission';
+                                            'trust.eu.parliament' = 'European Parliament ';
+                                            'trust.eu.council' = 'Council of the European Union'"))
+
+ggplot(t1,aes(x=value,fill=variable))+geom_bar(fill="dodgerblue2",alpha=0.8)+
+  scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
+  guides(fill=FALSE)+
+  facet_wrap(~variable)+
+  theme_classic() 
+
+```
+
+<br>
+
+```{r}
+efsa_00 %>% 
+select(trust.eu.commission,
+       trust.eu.parliament,
+       trust.eu.council) %>% 
+  sjt.corr(triangle = "lower",show.p=T,p.numeric=T)
+```
+
+<br>
+
+##Attitudes about EU agencies
+
+<br>
+
+Below is a list of selected EU agencies [that operate independently of the EU political institutions].  
+To what extent do you perceive these agencies to be credible regulators?
+<br>
+```{r}
+
+t1=  melt(t0,id.vars="ID1",measure.vars = c("credibility.eea.pre",
+                                            "credibility.efsa.pre",
+                                            "credibility.ema.pre",
+                                            "credibility.echa.pre")) %>% 
+  mutate(variable = variable %>% Recode("'credibility.eea.pre' = 'EEA';
+                                            'credibility.efsa.pre' = 'EFSA';
+                                            'credibility.ema.pre' = 'EMA';
+                                            'credibility.echa.pre' = 'ECHA'"))
+
+ggplot(t1,aes(x=value,fill=variable))+geom_bar(fill="dodgerblue2",alpha=0.8)+
+  scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
+  guides(fill=FALSE)+
+  facet_wrap(~variable)+
+  theme_classic()
+
+```
+<br>
+
+```{r}
+efsa_00 %>% 
+select(credibility.eea.pre,
+       credibility.efsa.pre,
+       credibility.ema.pre,
+       credibility.echa.pre) %>% 
+  sjt.corr(triangle = "lower",show.p=T,p.numeric=T)
+```
+
+<br>
+
+##Moderators
+
+<br>
+Some people argue that most private companies and corporations do not care about the social consequences of their actions and products. They are only interested in maximizing their short-term profits.
+<br>
+
+```{r}
+
+t1=  melt(t0,id.vars="ID1",measure.vars = c("greediness.industry",
+                                            "greediness.food.industry")) %>% 
+  mutate(variable = variable %>% Recode("'greediness.industry' = 'In general';
+                                            'greediness.food.industry' = 'In food industry'"))
+
+ggplot(t1,aes(x=value,fill=variable))+geom_bar(fill="dodgerblue2",alpha=0.8)+
+  scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
+  guides(fill=FALSE)+
+  facet_wrap(~variable)+
+  theme_classic()
+
+```
+
+
+<br>
+
+New technologies often spark debate about the opportunities they bring versus the threats they pose. This also applies in the EU policy context.
+
+For each of the following technologies, please indicate whether you believe that their implementation mainly brings benefits and opportunities, or rather poses a threat:
+
+<br>
+```{r}
+
+t1=  melt(t0,id.vars="ID1",measure.vars = c("supports.gmo",
+                                            "supports.pesticides",
+                                            "supports.additives")) %>% 
+  mutate(variable = variable %>% Recode("'supports.gmo' = 'Genetically modified foods';
+                                            'supports.pesticides' = 'Use of pesticides';
+                                            'supports.additives' = 'Artificial food additives'"))
+
+ggplot(t1,aes(x=value,fill=variable))+geom_bar(fill="dodgerblue2",alpha=0.8)+
+  scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
+  guides(fill=FALSE)+
+  facet_wrap(~variable)+
+  theme_classic()
+
+```
+<br>
+
+```{r}
+efsa_00 %>% 
+select(greediness.industry,
+       greediness.food.industry,
+       supports.gmo,
+       supports.pesticides,
+       supports.additives) %>% 
+  sjt.corr(triangle = "lower",show.p=T,p.numeric=T)
+```
+
+<br>
+```{r}
+t1 <- efsa_00 %>% 
+select(greediness.food.industry,
+       supports.gmo,
+       supports.pesticides,
+       supports.additives) %>%
+  mutate(greediness.food.industry = -1*greediness.food.industry)
+t1 %>% 
+sjt.itemanalysis()
+```
+
+<br>
+```{r}
+efsa_00 <- efsa_00 %>% 
+  mutate(prior.beliefs.food = (-1*greediness.food.industry+
+                                supports.gmo+
+                                supports.pesticides+
+                                supports.additives)/4)
+
+
+sjp.frq(efsa_00$prior.beliefs.food,
+        type="histogram",
+        geom.size = 1,
+        show.mean = T)+
+  theme_classic()
+
+```
+
+<br>
+
+```{r}
+sjp.grpfrq(efsa_00$prior.beliefs.food,
+           efsa_00$organization.type.raw,
+           ylim=c(-5.5,5.5),
+           type="boxplot",
+           coord.flip=T,
+           axis.titles = c("Organization type","Index - Prior beliefs about food industry"))+
+  theme_classic()
+```
+<br>
+```{r}
+ggplot(efsa_00,aes(prior.beliefs.food,organization.type.raw))+
+  geom_jitter(height = 0,size=2,colour="dodgerblue2",alpha=0.5)+theme_classic()
+```
+
+<br>
+#Evaluation of manipulation 
+<br>
+**Comprehension of case**
+<br>
+```{r}
+sjp.frq(efsa_00$comprehension.check,
+        ylim = c(0,nrow(efsa_00)),
+        axis.labels = c("Incorrect","Correct"),
+        title = "Comprehension of case")+ 
+  theme_classic()
+```
+
+<br>
+```{r}
+t1 <- efsa_00 %>% 
+  select(comprehension.check,
+         high.risk) %>% 
+  mutate(high.risk = Recode(high.risk,"0='Low risk';1='High risk'"))
+
+sjp.grpfrq(t1$comprehension.check,
+           t1$high.risk,
+           axis.labels = c("Incorrect","Correct"),
+        title = "Comprehension of case",
+        facet.grid = T,
+        show.values = F,
+        legend.labels=c("a","b"))+ 
+  theme_classic()
+```
+
+
+
+
+
+
