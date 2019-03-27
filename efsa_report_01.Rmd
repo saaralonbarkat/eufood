@@ -34,7 +34,9 @@ knitr::opts_chunk$set(eval = TRUE,
                       engine = "R", # Chunks will always have R code, unless noted
                       error = TRUE,
                       fig.path="Figures/",  # Set the figure options
-                      fig.align = "center")
+                      fig.align = "left",
+                      fig.width = 4,
+                      fig.height = 4)
 ```
 
 
@@ -44,6 +46,7 @@ library(tidyverse)
 library(car)
 library(reshape2)
 library(viridis)
+library(ggthemes)
 ```
 
 
@@ -99,52 +102,6 @@ Based on EFSA's conclusions, the pesticide Flupyradifurone has been approved.
    
 
 
-##Outcome variables 
-
-**Credibility of decision:**
-
-* I believe that the opinion was based strictly on scientific considerations. [credibility.pest.q1 | Q9.2]
-
-* I believe that the opinion was influenced by political interests. [credibility.pest.q2 | Q9.3]
-
-* I believe that the opinion was affected by the industry interests. [credibility.pest.q3 | Q9.4]
-
-* I believe that the opinion was formed after evaluating all the relevant data and evidence. [credibility.pest.q4 | Q9.5]
-
-* I believe that the assessment of the evidence was based on adequate methods. [credibility.pest.q5 | Q9.6]
-
-* I believe that EFSA's opinion about the pesticide may change the next time it will be asked to reexamine it. [credibility.pest.q6 | Q9.7]
-
-<br>
-Credibility of efsa:
-* EFSA is a credible regulator. [credibility.efsa.post | Q10.4]
-
-<br>
-**Reputation of EFSA:**  
-
-* EFSA is a credible regulator [reputation.efsa.q1 | Q10.5]
-
-* EFSA's employees are highly skilled in their profession. [reputation.efsa.q2 | Q10.6]
-
-* EFSA's employees understand the problems and issues in the field. [reputation.efsa.q3 | Q10.7] 
-
-* EFSA cooperates well with experts in the field. [reputation.efsa.q4 | Q10.8]
-
-* EFSA sets new scientific standards. [reputation.efsa.q5 | Q10.9]
-
-* EFSA’s output is of high quality. [reputation.efsa.q6 | Q10.10]
-
-* EFSA is an effective organization. [reputation.efsa.q7 | Q10.11]
-
-* EFSA’s mission is ethically defensible (their mission is the right mission). [reputation.efsa.q8 | Q10.12]
-
-* EFSA has a positive influence on society. [reputation.efsa.q9 | Q10.13] 
-
-* Decision-making in EFSA follows due process. [reputation.efsa.q10 | Q10.14] 
-
-* EFSA follows correct procedures. [reputation.efsa.q11 | Q10.15] 
-
-* Please complete the following sentence: EFSA has a reputation for... [reputation.efsa.open | Q11.1]
 
 <br>
 
@@ -175,7 +132,7 @@ sjp.frq(efsa_00$treatment,
         ylim = c(0,nrow(efsa_00)),
         axis.labels = c("Control","Treatment"),
         title = "Treatment")+ 
-  theme_classic()
+  theme_tufte()
 ```
 
 
@@ -186,7 +143,7 @@ sjp.frq(efsa_00$high.risk,
         ylim = c(0,nrow(efsa_00)),
         axis.labels = c("Low risk","High risk"),
         title = "Pesticide case")+ 
-  theme_classic()
+  theme_tufte()
 
 ```
 
@@ -239,7 +196,7 @@ sjstats::grpmean(efsa_00,
 sjp.frq(efsa_00$age,
         ylim = c(0,nrow(efsa_00)/2),
         title = "Participant age group")+ 
-  theme_classic()
+  theme_tufte()
 ```
 
 
@@ -250,7 +207,7 @@ sjp.frq(efsa_00$female,
         ylim = c(0,nrow(efsa_00)),
         axis.labels = c("Male","Female"),
         title = "Participant gender")+ 
-  theme_classic()
+  theme_tufte()
 ```
 
 **Education**
@@ -259,7 +216,7 @@ sjp.frq(efsa_00$female,
 sjp.frq(efsa_00$education,
         ylim = c(0,nrow(efsa_00)),
         title = "Participant education level")+ 
-  theme_classic()
+  theme_tufte()
 ```
 <br>
 **Discipline**
@@ -305,7 +262,7 @@ ggplot(t2,aes(reorder(language,n,desc),n))+
   scale_y_continuous(limits = c(0,nrow(t1)/4),breaks = 1:20)+
   scale_x_discrete(name = "")+
   coord_flip()+
-  theme_classic()
+  theme_tufte()
 ```
 
 *Note: a participant may report more than one native language. 
@@ -357,20 +314,25 @@ ggplot(t2,aes(reorder(area,n,desc),n))+
   scale_y_continuous(breaks = seq(0,nrow(t1),5))+
   scale_x_discrete(name = "")+
   coord_flip()+
-  theme_classic()
+  theme_tufte()
 
 ```
 <br>
 
 **Organization type**
-```{r}
-sjp.frq(efsa_00$organization.type.raw,
-        sort.frq = "desc",
-        axis.title = "Type",
-        ylim = c(0,nrow(efsa_00)/2),
-        title = "Organization type")+
-  #coord_flip()+
-  theme_classic()
+```{r, fig.width=6}
+
+efsa_00 %>% 
+  group_by(organization.type.raw) %>% 
+  tally() %>% 
+  
+  ggplot(aes(reorder(organization.type.raw,n,desc),n))+
+  geom_bar(stat="identity",fill="dodgerblue2",alpha=0.8)+
+  scale_y_continuous(breaks = seq(0,nrow(efsa_00),1))+
+  scale_x_discrete(name = "")+
+  coord_flip()+
+  theme_tufte()
+
 ```
 
 
@@ -382,23 +344,20 @@ sjp.frq(efsa_00$organization.type.raw,
 To what extent do you trust the following EU institutions?
 <br>
 
-```{r}
-
-t0 = efsa_00 %>% 
-  mutate(ID1 = 1:nrow(efsa_00))
-
-t1=  melt(t0,id.vars="ID1",measure.vars = c("trust.eu.commission",
-                                            "trust.eu.parliament",
-                                            "trust.eu.council")) %>% 
-    mutate(variable = variable %>% Recode("'trust.eu.commission' = 'European Commission';
+```{r, fig.width=6}
+efsa_00 %>% 
+  select(trust.eu.commission,
+         trust.eu.parliament,
+         trust.eu.council) %>% 
+  gather() %>% 
+  mutate(key = key %>% Recode("'trust.eu.commission' = 'European Commission';
                                             'trust.eu.parliament' = 'European Parliament ';
-                                            'trust.eu.council' = 'Council of the European Union'"))
-
-ggplot(t1,aes(x=value,fill=variable))+geom_bar(fill="dodgerblue2",alpha=0.8)+
+                                            'trust.eu.council' = 'Council of the European Union'")) %>% 
+ggplot(aes(x=value,fill=key))+geom_bar(fill="dodgerblue2",alpha=0.8)+
   scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
   guides(fill=FALSE)+
-  facet_wrap(~variable)+
-  theme_classic() 
+  facet_wrap(~key)+
+  theme_tufte() 
 
 ```
 
@@ -423,20 +382,18 @@ To what extent do you perceive these agencies to be credible regulators?
 <br>
 ```{r}
 
-t1=  melt(t0,id.vars="ID1",measure.vars = c("credibility.eea.pre",
-                                            "credibility.efsa.pre",
-                                            "credibility.ema.pre",
-                                            "credibility.echa.pre")) %>% 
-  mutate(variable = variable %>% Recode("'credibility.eea.pre' = 'EEA';
-                                            'credibility.efsa.pre' = 'EFSA';
-                                            'credibility.ema.pre' = 'EMA';
-                                            'credibility.echa.pre' = 'ECHA'"))
-
-ggplot(t1,aes(x=value,fill=variable))+geom_bar(fill="dodgerblue2",alpha=0.8)+
+efsa_00 %>% 
+  select(credibility.eea.pre,
+         credibility.efsa.pre,
+         credibility.ema.pre,
+         credibility.echa.pre) %>% 
+  gather() %>% 
+  mutate(key = key %>% Recode("'credibility.eea.pre' = 'EEA';'credibility.efsa.pre' = 'EFSA'; 'credibility.ema.pre' = 'EMA';'credibility.echa.pre' = 'ECHA'")) %>% 
+ggplot(aes(x=value,fill=key))+geom_bar(fill="dodgerblue2",alpha=0.8)+
   scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
   guides(fill=FALSE)+
-  facet_wrap(~variable)+
-  theme_classic()
+  facet_wrap(~key)+
+  theme_tufte()
 
 ```
 <br>
@@ -459,17 +416,17 @@ Some people argue that most private companies and corporations do not care about
 <br>
 
 ```{r}
-
-t1=  melt(t0,id.vars="ID1",measure.vars = c("greediness.industry",
-                                            "greediness.food.industry")) %>% 
-  mutate(variable = variable %>% Recode("'greediness.industry' = 'In general';
-                                            'greediness.food.industry' = 'In food industry'"))
-
-ggplot(t1,aes(x=value,fill=variable))+geom_bar(fill="dodgerblue2",alpha=0.8)+
+efsa_00 %>% 
+  select(greediness.industry,
+         greediness.food.industry) %>% 
+  gather() %>% 
+  mutate(key = key %>% Recode("'greediness.industry' = 'In general';'greediness.food.industry' = 'In food industry'")) %>% 
+ggplot(aes(x=value,fill=key))+geom_bar(fill="dodgerblue2",alpha=0.8)+
   scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
   guides(fill=FALSE)+
-  facet_wrap(~variable)+
-  theme_classic()
+  facet_wrap(~key)+
+  theme_tufte()
+
 
 ```
 
@@ -481,20 +438,19 @@ New technologies often spark debate about the opportunities they bring versus th
 For each of the following technologies, please indicate whether you believe that their implementation mainly brings benefits and opportunities, or rather poses a threat:
 
 <br>
-```{r}
+```{r, fig.width=6}
 
-t1=  melt(t0,id.vars="ID1",measure.vars = c("supports.gmo",
-                                            "supports.pesticides",
-                                            "supports.additives")) %>% 
-  mutate(variable = variable %>% Recode("'supports.gmo' = 'Genetically modified foods';
-                                            'supports.pesticides' = 'Use of pesticides';
-                                            'supports.additives' = 'Artificial food additives'"))
-
-ggplot(t1,aes(x=value,fill=variable))+geom_bar(fill="dodgerblue2",alpha=0.8)+
+efsa_00 %>% 
+  select(supports.gmo,
+         supports.pesticides,
+         supports.additives) %>% 
+  gather() %>% 
+  mutate(key = key %>% Recode("'supports.gmo' = 'Genetically modified foods';'supports.pesticides' = 'Use of pesticides'; 'supports.additives' = 'Artificial food additives'")) %>% 
+ggplot(aes(x=value,fill=key))+geom_bar(fill="dodgerblue2",alpha=0.8)+
   scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
   guides(fill=FALSE)+
-  facet_wrap(~variable)+
-  theme_classic()
+  facet_wrap(~key)+
+  theme_tufte()
 
 ```
 <br>
@@ -534,28 +490,313 @@ sjp.frq(efsa_00$prior.beliefs.food,
         type="histogram",
         geom.size = 1,
         show.mean = T)+
-  theme_classic()
+  theme_tufte()
 
 ```
 
 <br>
-
-```{r}
-sjp.grpfrq(efsa_00$prior.beliefs.food,
-           efsa_00$organization.type.raw,
-           ylim=c(-5.5,5.5),
-           type="boxplot",
-           coord.flip=T,
-           axis.titles = c("Organization type","Index - Prior beliefs about food industry"))+
-  theme_classic()
-```
-<br>
-```{r}
+```{r, fig.width=6}
 ggplot(efsa_00,aes(prior.beliefs.food,organization.type.raw))+
-  geom_jitter(height = 0,size=2,colour="dodgerblue2",alpha=0.5)+theme_classic()
+  geom_jitter(height = 0,size=2,colour="dodgerblue2",alpha=0.6)+
+  scale_x_continuous(name="Index - prior beliefs about food industry",limits = c(-6,6),breaks = -5:5)+
+  theme_tufte()
+  
 ```
 
 <br>
+
+##Relations with efsa (and other agencies)
+<br>
+I am well informed about the agency's mandate.
+<br>
+```{r}
+efsa_00 %>% 
+  select(informed.eea:informed.efsa) %>% 
+  gather() %>% 
+  mutate(key = key %>% Recode("'informed.eea' = 'EEA';'informed.ema' = 'EMA';'informed.echa' = 'ECHA';'informed.efsa' = 'EFSA'")) %>% 
+ggplot(aes(x=value,fill=key))+geom_bar(fill="dodgerblue2",alpha=0.8)+
+  scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
+  guides(fill=FALSE)+
+  facet_wrap(~key)+
+  theme_tufte()
+
+```
+
+<br>
+The agency’s decisions may affect the operations of the organization in which I work.
+<br>
+```{r}
+efsa_00 %>% 
+  select(affect.decisions.eea:affect.decisions.efsa) %>% 
+  gather() %>% 
+  mutate(key = key %>% Recode("'affect.decisions.eea' = 'EEA';'affect.decisions.ema' = 'EMA';'affect.decisions.echa' = 'ECHA';'affect.decisions.efsa' = 'EFSA'")) %>% 
+ggplot(aes(x=value,fill=key))+geom_bar(fill="dodgerblue2",alpha=0.8)+
+  scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
+  guides(fill=FALSE)+
+  facet_wrap(~key)+
+  theme_tufte()
+```
+
+<br>
+How often does your organization interact with the following agencies?
+<br>
+```{r,fig.width=6}
+efsa_00 %>% 
+  select(interact.eea:interact.efsa) %>%
+  drop_na()%>% 
+  gather() %>% 
+  mutate(key = key %>% Recode("'interact.eea' = 'EEA';'interact.ema' = 'EMA';'interact.echa' = 'ECHA';'interact.efsa' = 'EFSA'")) %>% 
+ggplot(aes(x=value,fill=key))+geom_bar(fill="dodgerblue2",alpha=0.8)+
+  #scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
+  guides(fill=FALSE)+
+  facet_wrap(~key)+
+  coord_flip()+
+  theme_tufte()
+```
+
+<br>
+##Outcome variables
+<br>
+###Perceived independece
+<br>
+The agency's opinions can be influenced by EU political institutions (European Commission, Council, Parliament).
+```{r}
+efsa_00 %>% 
+  select(idependence.polit.efsa:idependence.polit.echa) %>% 
+  gather() %>% 
+  mutate(key = key %>% Recode("'idependence.polit.eea' = 'EEA';'idependence.polit.ema' = 'EMA';'idependence.polit.echa' = 'ECHA';'idependence.polit.efsa' = 'EFSA'")) %>% 
+ggplot(aes(x=value,fill=key))+geom_bar(fill="dodgerblue2",alpha=0.8)+
+  scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
+  guides(fill=FALSE)+
+  facet_wrap(~key)+
+  theme_tufte()
+```
+
+<br>
+The agency's opinions can be influenced by the industry.
+```{r}
+efsa_00 %>% 
+  select(idependence.industry.efsa:idependence.industry.echa) %>% 
+  gather() %>% 
+  mutate(key = key %>% Recode("'idependence.industry.eea' = 'EEA';'idependence.industry.ema' = 'EMA';'idependence.industry.echa' = 'ECHA';'idependence.industry.efsa' = 'EFSA'")) %>% 
+ggplot(aes(x=value,fill=key))+geom_bar(fill="dodgerblue2",alpha=0.8)+
+  scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
+  guides(fill=FALSE)+
+  facet_wrap(~key)+
+  theme_tufte()
+```
+<br>
+
+```{r}
+efsa_00 %>% 
+  select(idependence.polit.efsa:idependence.polit.echa,
+         idependence.industry.efsa:idependence.industry.echa) %>% 
+  sjt.corr(triangle = "lower",show.p=T,p.numeric=T)
+```
+<br>
+```{r}
+ggplot(efsa_00,aes(efsa_00$idependence.polit.efsa,
+         efsa_00$idependence.industry.efsa))+
+  geom_point(size=2,colour="dodgerblue2",alpha=0.5)+
+  geom_smooth(method="lm",colour="black")+
+  scale_x_continuous(name="Independence from political stakeholders",breaks=-5:5)+
+  scale_y_continuous(name="Independence from industry",breaks=-5:5)+
+  theme_tufte()
+```
+
+
+
+<br>
+###Credibility of decision
+<br>
+
+* I believe that the opinion was based strictly on scientific considerations. [credibility.pest.q1 | Q9.2]
+
+* I believe that the opinion was influenced by political interests. [credibility.pest.q2 | Q9.3]
+
+* I believe that the opinion was affected by the industry interests. [credibility.pest.q3 | Q9.4]
+
+* I believe that the opinion was formed after evaluating all the relevant data and evidence. [credibility.pest.q4 | Q9.5]
+
+* I believe that the assessment of the evidence was based on adequate methods. [credibility.pest.q5 | Q9.6]
+
+* I believe that EFSA's opinion about the pesticide may change the next time it will be asked to reexamine it. [credibility.pest.q6 | Q9.7]
+
+<br>
+Credibility of efsa:
+* EFSA is a credible regulator. [credibility.efsa.post | Q10.4]
+
+<br>
+
+<br>
+```{r, fig.width=6}
+efsa_00 %>% 
+  select(credibility.pest.q1:credibility.pest.q6) %>% 
+  gather() %>% 
+ggplot(aes(x=value,fill=key))+geom_bar(fill="dodgerblue2",alpha=0.8)+
+  scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
+  guides(fill=FALSE)+
+  facet_wrap(~key)+
+  theme_tufte()
+```
+<br>
+
+###Credibility of EFSA
+<br>
+EFSA is a credible regulator.
+<br>
+```{r}
+efsa_00 %>% 
+  select(credibility.efsa.pre,
+         credibility.efsa.post) %>% 
+  gather() %>%
+  mutate(key = key %>% Recode("'credibility.efsa.pre' = 'Pre-manipulation';'credibility.efsa.post' = 'Post-manipulation'")) %>%
+ggplot(aes(x=value,fill=key))+geom_bar(fill="dodgerblue2",alpha=0.8)+
+  scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
+  guides(fill=FALSE)+
+  facet_wrap(~key)+
+  theme_tufte()
+```
+<br>
+```{r}
+ggplot(efsa_00,aes(efsa_00$credibility.efsa.pre,
+         efsa_00$credibility.efsa.post))+
+  geom_point(size=2,colour="dodgerblue2",alpha=0.5)+
+  geom_smooth(method="lm",colour="black")+
+  scale_x_continuous(name="Pre-manipulation",breaks=-5:5)+
+  scale_y_continuous(name="Post-manipulation",breaks=-5:5)+
+  theme_tufte()
+```
+
+
+<br>
+###Reputation
+<br>
+
+**Reputation of EFSA:**  
+
+*Technical*
+<br>
+
+* EFSA is a credible regulator [reputation.efsa.q1 | Q10.5]
+
+* EFSA's employees are highly skilled in their profession. [reputation.efsa.q2 | Q10.6]
+
+* EFSA's employees understand the problems and issues in the field. [reputation.efsa.q3 | Q10.7] 
+
+* EFSA cooperates well with experts in the field. [reputation.efsa.q4 | Q10.8]
+
+* EFSA sets new scientific standards. [reputation.efsa.q5 | Q10.9]
+<br>
+
+<br>
+```{r, fig.width=6}
+efsa_00 %>% 
+  select(reputation.efsa.q1:reputation.efsa.q5) %>% 
+  gather() %>% 
+ggplot(aes(x=value,fill=key))+geom_bar(fill="dodgerblue2",alpha=0.8)+
+  scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
+  guides(fill=FALSE)+
+  ggtitle("Technical dimension")+
+  facet_wrap(~key)+
+  theme_tufte()
+```
+<br>
+*Performative*
+<br>
+
+* EFSA’s output is of high quality. [reputation.efsa.q6 | Q10.10]
+
+* EFSA is an effective organization. [reputation.efsa.q7 | Q10.11]
+
+<br>
+```{r}
+efsa_00 %>% 
+  select(reputation.efsa.q6:reputation.efsa.q7) %>% 
+  gather() %>% 
+ggplot(aes(x=value,fill=key))+geom_bar(fill="dodgerblue2",alpha=0.8)+
+  scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
+  guides(fill=FALSE)+
+  ggtitle("Performative dimension")+
+  facet_wrap(~key)+
+  theme_tufte()
+```
+<br>
+*Moral*
+<br>
+
+* EFSA’s mission is ethically defensible (their mission is the right mission). [reputation.efsa.q8 | Q10.12]
+
+* EFSA has a positive influence on society. [reputation.efsa.q9 | Q10.13] 
+<br>
+```{r}
+efsa_00 %>% 
+  select(reputation.efsa.q8:reputation.efsa.q9) %>% 
+  gather() %>% 
+ggplot(aes(x=value,fill=key))+geom_bar(fill="dodgerblue2",alpha=0.8)+
+  scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
+  guides(fill=FALSE)+
+  ggtitle("Moral dimension")+
+  facet_wrap(~key)+
+  theme_tufte()
+```
+<br>
+*Procedural*
+<br>
+
+* Decision-making in EFSA follows due process. [reputation.efsa.q10 | Q10.14] 
+
+* EFSA follows correct procedures. [reputation.efsa.q11 | Q10.15] 
+
+* Please complete the following sentence: EFSA has a reputation for... [reputation.efsa.open | Q11.1]
+<br>
+```{r}
+efsa_00 %>% 
+  select(reputation.efsa.q10:reputation.efsa.q11) %>% 
+  gather() %>% 
+ggplot(aes(x=value,fill=key))+geom_bar(fill="dodgerblue2",alpha=0.8)+
+  scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
+  guides(fill=FALSE)+
+  ggtitle("Procedural dimension")+
+  facet_wrap(~key)+
+  theme_tufte()
+```
+<br>
+
+```{r}
+efsa_00 %>% 
+  select(reputation.efsa.q1:reputation.efsa.q11) %>% 
+  sjt.corr(triangle = "lower",show.p=T,p.numeric=T)
+```
+
+<br>
+```{r}
+efsa_00 <- efsa_00 %>% 
+  mutate(reputation.efsa.technical = (reputation.efsa.q1+reputation.efsa.q2+reputation.efsa.q3+reputation.efsa.q4+reputation.efsa.q5)/5,
+         reputation.efsa.performative = (reputation.efsa.q6+reputation.efsa.q7)/2,
+         reputation.efsa.moral = (reputation.efsa.q8+reputation.efsa.q9)/2,
+         reputation.efsa.procedural = (reputation.efsa.q10+reputation.efsa.q11)/2)
+
+t1 <- efsa_00 %>% 
+  select(reputation.efsa.technical:reputation.efsa.procedural) %>% 
+  gather() %>% 
+  mutate(key = Recode(key,"'reputation.efsa.technical'='Technical';'reputation.efsa.performative'='Performative';'reputation.efsa.moral'='Moral';'reputation.efsa.procedural'='Procedural'"))
+
+sjp.grpfrq(t1$value,
+           t1$key,
+           type="boxplot")
+ggplot(t1,aes(x=key,y=value))+
+  geom_boxplot()+
+  geom_jitter(height = 0.2,width = 0 ,size=1,colour="dodgerblue2",alpha=0.6)+
+  ggtitle("Procedural dimension")+
+  scale_y_continuous(limits = c(-5,5),breaks=-5:5)+
+  coord_flip()+
+  theme_tufte()
+
+```
+
+<br>
+
 #Evaluation of manipulation 
 <br>
 **Comprehension of case**
@@ -565,7 +806,7 @@ sjp.frq(efsa_00$comprehension.check,
         ylim = c(0,nrow(efsa_00)),
         axis.labels = c("Incorrect","Correct"),
         title = "Comprehension of case")+ 
-  theme_classic()
+  theme_tufte()
 ```
 
 <br>
@@ -577,13 +818,73 @@ t1 <- efsa_00 %>%
 
 sjp.grpfrq(t1$comprehension.check,
            t1$high.risk,
+           ylim = c(0,nrow(efsa_00)/2),
            axis.labels = c("Incorrect","Correct"),
         title = "Comprehension of case",
         facet.grid = T,
-        show.values = F,
-        legend.labels=c("a","b"))+ 
-  theme_classic()
+        show.prc = F)+ 
+  theme_tufte()
 ```
+
+<br>
+
+**View time**
+```{r}
+efsa_00 %>% 
+  select(viewtime.intro:viewtime.pesticide) %>%
+  drop_na()%>% 
+  gather() %>% 
+  #mutate(key = key %>% Recode("'interact.eea' = 'EEA';'interact.ema' = 'EMA';'interact.echa' = 'ECHA';'interact.efsa' = 'EFSA'")) %>% 
+ggplot(aes(x=value,fill=key))+geom_histogram(fill="dodgerblue2",alpha=0.8)+
+  scale_x_continuous(name="Time (in seconds))")+
+  guides(fill=FALSE)+
+  facet_wrap(~key)+
+  #coord_flip()+
+  theme_tufte()
+```
+
+<br>
+
+```{r}
+sjp.frq(filter(efsa_00,viewtime.case.total>0)$viewtime.case.total,
+        type="histogram",
+        show.mean = T)+
+  theme_tufte()
+```
+
+<br>
+
+**Familiarity with persicide case**
+<br>
+Were you familiar with EFSA's opinion about the pesticide ["Flupyradifurone"/"Amitrole"] prior to this survey?
+<br>
+```{r}
+sjp.frq(efsa_00$familiarity.pesticide,
+        ylim = c(0,nrow(efsa_00)*1.3),
+        axis.labels = c("No","Yes"),
+        title = "")+ 
+  theme_tufte()
+```
+
+<br>
+```{r}
+t1 <- efsa_00 %>% 
+  select(familiarity.pesticide,
+         high.risk) %>% 
+  mutate(high.risk = Recode(high.risk,"0='Low risk';1='High risk'"))
+
+sjp.grpfrq(t1$familiarity.pesticide,
+           t1$high.risk,
+           axis.labels = c("No","Yes"),
+        title = "",
+        facet.grid = T,
+        show.prc = F,
+        legend.labels=c("a","b"))+ 
+  theme_tufte()
+```
+
+<br>
+
 
 
 

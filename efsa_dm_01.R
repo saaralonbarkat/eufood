@@ -201,10 +201,7 @@ efsa_00 <- efsa_00 %>%
          credibility.efsa.pre = efsa_raw$Q2.3_2 + efsa_raw$Q3.3_2 -6,
          credibility.ema.pre = efsa_raw$Q2.3_3 + efsa_raw$Q3.3_3 -6,
          credibility.echa.pre = efsa_raw$Q2.3_4 + efsa_raw$Q3.3_4 - 6) %>% 
-  mutate(credibility.eea.pre = credibility.eea.pre %>% Recode("-6=NA;6=0"),
-         credibility.efsa.pre = credibility.efsa.pre %>% Recode("-6=NA;6=0"),
-         credibility.ema.pre = credibility.ema.pre %>% Recode("-6=NA;6=0"),
-         credibility.echa.pre = credibility.echa.pre %>% Recode("-6=NA;6=0"))
+  mutate_at(vars(starts_with("credibility.e")),funs(Recode(.,"-6=NA;6=0")))
 
 
 #Attitudes about EU institutions
@@ -212,10 +209,8 @@ efsa_00 <- efsa_00 %>%
   mutate(trust.eu.commission = efsa_raw$Q2.2_1+efsa_raw$Q3.2_1-6,
          trust.eu.parliament = efsa_raw$Q2.2_2+efsa_raw$Q3.2_2-6,
          trust.eu.council = efsa_raw$Q2.2_3+efsa_raw$Q3.2_3-6) %>% 
-  mutate(trust.eu.commission = trust.eu.commission %>% na_if(-6),
-         trust.eu.parliament = trust.eu.parliament %>% na_if(-6),
-         trust.eu.council = trust.eu.council %>% na_if(-6))
-
+  mutate_at(vars(starts_with("trust.eu.")),funs(Recode(.,"-6=NA")))
+ 
 
 
 #Moderators
@@ -224,8 +219,7 @@ efsa_00 <- efsa_00 %>%
 efsa_00 <- efsa_00 %>% 
   mutate(greediness.industry = efsa_raw$Q4.2-6,
          greediness.food.industry = efsa_raw$Q4.5-6) %>% 
-  mutate(greediness.industry = greediness.industry %>% na_if(-6),
-         greediness.food.industry = greediness.food.industry %>% na_if(-6))
+  mutate_at(vars(starts_with("greediness.")),funs(Recode(.,"-6=NA")))
 
 
 ##Attitudes about innovations in food industry
@@ -233,11 +227,46 @@ efsa_00 <- efsa_00 %>%
   mutate(supports.gmo = efsa_raw$Q4.7_3-6,
          supports.pesticides = efsa_raw$Q4.7_5-6,
          supports.additives = efsa_raw$Q4.7_7-6) %>% 
-  mutate(supports.gmo = supports.gmo %>% na_if(-6),
-         supports.pesticides = supports.pesticides %>% na_if(-6),
-         supports.additives = supports.additives %>% na_if(-6))
+  mutate_at(vars(starts_with("supports.")),funs(Recode(.,"-6=NA")))
 
 
+
+
+##Relations with agencies
+
+efsa_00 <- efsa_00 %>% 
+  mutate(informed.eea = efsa_raw$Q12.2_1-6,
+         informed.ema = efsa_raw$Q12.2_3-6,
+         informed.echa = efsa_raw$Q12.2_4-6,
+         informed.efsa = efsa_raw$Q12.2_5-6) %>% 
+
+  mutate(affect.decisions.eea = efsa_raw$Q12.3_1-6,
+         affect.decisions.ema = efsa_raw$Q12.3_3-6,
+         affect.decisions.echa = efsa_raw$Q12.3_4-6,
+         affect.decisions.efsa = efsa_raw$Q12.3_5-6) %>% 
+  mutate_at(vars(starts_with("affect.decisions.")),funs(Recode(.,"-6=NA;6=0"))) %>% 
+  mutate_at(vars(starts_with("informed.")),funs(Recode(.,"-6=NA;6=0")))
+
+
+efsa_00 <- efsa_00 %>%   
+  mutate(interact.eea = efsa_raw$Q12.4_1,
+         interact.ema = efsa_raw$Q12.4_2,
+         interact.echa = efsa_raw$Q12.4_3,
+         interact.efsa = efsa_raw$Q12.4_4) %>% 
+  mutate_at(c("interact.eea",
+              "interact.ema",
+              "interact.echa",
+              "interact.efsa"),funs(Recode(.,"0=NA;
+                                              1='1. not at all';
+                                              2='2. About once a year';
+                                              3='3. About twice a year';
+                                              4='4. About once a month';
+                                              5='5. A few times a month';
+                                              6='6. I dont know';
+                                              7='7. I prefer not to answer'")))
+  
+  
+  
 #Manipulation checks
 
 
@@ -276,8 +305,17 @@ efsa_00 <- efsa_00 %>%
 
 ##perceived independence
 efsa_00 <- efsa_00 %>% 
-  mutate(idependence.polit.efsa = efsa_raw$Q10.2,
-         idependence.industry.efsa = efsa_raw$Q10.3)
+  mutate(idependence.polit.efsa = efsa_raw$Q10.2-6,
+         idependence.polit.eea = efsa_raw$Q12.5_1-6,
+         idependence.polit.ema = efsa_raw$Q12.5_3-6,
+         idependence.polit.echa = efsa_raw$Q12.5_4-6,
+         
+         idependence.industry.efsa = efsa_raw$Q10.3-6,
+         idependence.industry.eea = efsa_raw$Q12.6_1-6,
+         idependence.industry.ema = efsa_raw$Q12.6_3-6,
+         idependence.industry.echa = efsa_raw$Q12.6_4-6) %>%
+  
+  mutate_at(vars(starts_with("idependence.")),funs(Recode(.,"-6=NA")))
 
 
 #Outcome variable
@@ -287,8 +325,13 @@ efsa_00 <- efsa_00 %>%
          credibility.pest.q3 = efsa_raw$Q9.4 - 6,
          credibility.pest.q4 = efsa_raw$Q9.5 - 6,
          credibility.pest.q5 = efsa_raw$Q9.6 - 6,
-         credibility.pest.q6 = efsa_raw$Q9.7 - 6) %>% 
+         credibility.pest.q6 = efsa_raw$Q9.7 - 6) %>%
+  mutate_at(vars(starts_with("credibility.pest.")),funs(Recode(.,"-6=NA"))) %>% 
+
   mutate(credibility.efsa.post = efsa_raw$Q10.4 - 6) %>%
+  mutate(credibility.efsa.post = credibility.efsa.post %>% na_if(-6)) 
+
+efsa_00 <- efsa_00 %>% 
   mutate(reputation.efsa.q1 = efsa_raw$Q10.5 -6,
          reputation.efsa.q2 = efsa_raw$Q10.6 -6,
          reputation.efsa.q3 = efsa_raw$Q10.7 -6,
@@ -300,7 +343,9 @@ efsa_00 <- efsa_00 %>%
          reputation.efsa.q9 = efsa_raw$Q10.13 -6,
          reputation.efsa.q10 = efsa_raw$Q10.14 -6,
          reputation.efsa.q11 = efsa_raw$Q10.15 -6,
-         reputation.efsa.open = efsa_raw$Q11.1)
+         reputation.efsa.open = efsa_raw$Q11.1) %>% 
+mutate_at(vars(starts_with("reputation.efsa.")),funs(Recode(.,"-6=NA")))
+
 
 
 
