@@ -8,8 +8,6 @@ library(tidyverse)
 library(car)
 library(stringr)
 library(lubridate)
-library(sjPlot)
-library(sjmisc)
 
 #loading raw data CSV file
 efsa_raw_00 <- read_csv("C:/SAAR/UNIVERSITY/R/EFSA/data/efsa_data.csv")
@@ -27,8 +25,8 @@ efsa_raw_00 <- read_csv("C:/SAAR/UNIVERSITY/R/EFSA/data/efsa_data.csv")
 efsa_00 <-
   efsa_raw %>% 
   select(id = V1) %>%  
-  mutate(start.date = efsa_raw$V8,
-         end.date = efsa_raw$V9) 
+  mutate(start.date = dmy_hm(efsa_raw$V8),
+         end.date = dmy_hm(efsa_raw$V9)) 
 
 
 #Demographics
@@ -57,12 +55,18 @@ efsa_00 <-
          t2 = efsa_raw$Q6.1 %>% Recode("1='high risk treatment'"),
          t3 = efsa_raw$Q7.1 %>% Recode("1='low risk control'"),
          t4 = efsa_raw$Q8.1 %>% Recode("1='high risk control'")) %>% 
-  mutate(condition = paste0(t1,t2,t3,t4) %>% str_replace_all("NA|0","")) %>% 
+  mutate(condition = paste0(t1,t2,t3,t4) %>% str_replace_all("NA|0","") %>% Recode("''=NA")) %>% 
   select(-t1,-t2,-t3,-t4) %>% 
  
   
-  mutate(treatment = ifelse(str_detect(condition,"treatment")==T,1,0),
-         high.risk = ifelse(str_detect(condition,"high")==T,1,0))
+  mutate(treatment = ifelse(str_detect(condition,"treatment")==T,1,
+                            ifelse(str_detect(condition,"control")==T,0,NA)),
+         high.risk = ifelse(str_detect(condition,"high")==T,1,
+                            ifelse(str_detect(condition,"low")==T,0,NA)))
+
+efsa_00 <- efsa_00 %>% 
+  mutate(treatment.start = ifelse(efsa_raw$Q2.1==1,"treatment",
+                                  ifelse(efsa_raw$Q3.1==1,"control",NA)))
 
 
 #Native language
@@ -346,8 +350,8 @@ efsa_00 <- efsa_00 %>%
          reputation.efsa.open = efsa_raw$Q11.1) %>% 
 mutate_at(vars(starts_with("reputation.efsa.")),funs(Recode(.,"-6=NA")))
 
-
-
+efsa_00 <- efsa_00 %>%
+  mutate(open.text = efsa_raw$Q13.15)
 
 
   
