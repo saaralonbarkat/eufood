@@ -9,6 +9,29 @@ library(car)
 library(stringr)
 library(lubridate)
 
+
+
+
+#files <- list.files(path = "C:/Users/OWNER/surfdrive/research/My studies/Study 2 - reputation and standpoint on issues/data/raw_data/new/")
+#f <- list()
+#for (i in 1:length(files)) {
+#  f[[i]] <- read_csv(str_c("C:/Users/OWNER/surfdrive/research/My studies/Study 2 - reputation and standpoint on issues/data/raw_data/new/",files[i]))%>%.[-1,] %>%  
+#    mutate(survey.name=files[i])}
+
+
+
+
+#t1 <- bind_rows(f)%>%
+#  data.frame() %>%
+#  select(-(V11:V222)) %>%
+#  select(-LocationLatitude,
+#         -LocationLongitude,
+#         -LocationAccuracy,
+#         -V6) %>% 
+#  write.csv(file = "C:/SAAR/UNIVERSITY/R/EFSA/data/efsa_data.csv")
+
+
+
 #loading raw data CSV file
 efsa_raw_00 <- read_csv("C:/SAAR/UNIVERSITY/R/EFSA/data/efsa_data.csv")
 
@@ -205,7 +228,7 @@ efsa_00 <- efsa_00 %>%
          credibility.efsa.pre = efsa_raw$Q2.3_2 + efsa_raw$Q3.3_2 -6,
          credibility.ema.pre = efsa_raw$Q2.3_3 + efsa_raw$Q3.3_3 -6,
          credibility.echa.pre = efsa_raw$Q2.3_4 + efsa_raw$Q3.3_4 - 6) %>% 
-  mutate_at(vars(starts_with("credibility.e")),funs(Recode(.,"-6=NA;6=0")))
+  mutate_at(vars(starts_with("credibility.e")),list(~Recode(.,"-6=NA;6=0")))
 
 
 #Attitudes about EU institutions
@@ -213,7 +236,7 @@ efsa_00 <- efsa_00 %>%
   mutate(trust.eu.commission = efsa_raw$Q2.2_1+efsa_raw$Q3.2_1-6,
          trust.eu.parliament = efsa_raw$Q2.2_2+efsa_raw$Q3.2_2-6,
          trust.eu.council = efsa_raw$Q2.2_3+efsa_raw$Q3.2_3-6) %>% 
-  mutate_at(vars(starts_with("trust.eu.")),funs(Recode(.,"-6=NA")))
+  mutate_at(vars(starts_with("trust.eu.")),list(~Recode(.,"-6=NA")))
  
 
 
@@ -223,7 +246,7 @@ efsa_00 <- efsa_00 %>%
 efsa_00 <- efsa_00 %>% 
   mutate(greediness.industry = efsa_raw$Q4.2-6,
          greediness.food.industry = efsa_raw$Q4.5-6) %>% 
-  mutate_at(vars(starts_with("greediness.")),funs(Recode(.,"-6=NA")))
+  mutate_at(vars(starts_with("greediness.")),list(~Recode(.,"-6=NA")))
 
 
 ##Attitudes about innovations in food industry
@@ -231,7 +254,7 @@ efsa_00 <- efsa_00 %>%
   mutate(supports.gmo = efsa_raw$Q4.7_3-6,
          supports.pesticides = efsa_raw$Q4.7_5-6,
          supports.additives = efsa_raw$Q4.7_7-6) %>% 
-  mutate_at(vars(starts_with("supports.")),funs(Recode(.,"-6=NA")))
+  mutate_at(vars(starts_with("supports.")),list(~Recode(.,"-6=NA")))
 
 
 
@@ -248,8 +271,8 @@ efsa_00 <- efsa_00 %>%
          affect.decisions.ema = efsa_raw$Q12.3_3-6,
          affect.decisions.echa = efsa_raw$Q12.3_4-6,
          affect.decisions.efsa = efsa_raw$Q12.3_5-6) %>% 
-  mutate_at(vars(starts_with("affect.decisions.")),funs(Recode(.,"-6=NA;6=0"))) %>% 
-  mutate_at(vars(starts_with("informed.")),funs(Recode(.,"-6=NA;6=0")))
+  mutate_at(vars(starts_with("affect.decisions.")),list(~Recode(.,"-6=NA;6=0"))) %>% 
+  mutate_at(vars(starts_with("informed.")),list(~Recode(.,"-6=NA;6=0")))
 
 
 efsa_00 <- efsa_00 %>%   
@@ -260,7 +283,7 @@ efsa_00 <- efsa_00 %>%
   mutate_at(c("interact.eea",
               "interact.ema",
               "interact.echa",
-              "interact.efsa"),funs(Recode(.,"0=NA;
+              "interact.efsa"),list(~Recode(.,"0=NA;
                                               1='1. not at all';
                                               2='2. About once a year';
                                               3='3. About twice a year';
@@ -278,7 +301,8 @@ efsa_00 <- efsa_00 %>%
 efsa_00 %>% select(high.risk) %>% 
   mutate(t1 = efsa_raw$Q13.9,
          t2 = efsa_raw$Q13.10) %>% 
-  mutate(comprehension.check = ifelse(high.risk==1&t2==1|high.risk==0&t1==2,1,0)) -> 
+  mutate(comprehension.check = ifelse(high.risk==1&t2==1|high.risk==0&t1==2,1,
+                                      ifelse(t1==0&t2==0,NA,0))) -> 
   t1
 
 efsa_00 <- efsa_00 %>% 
@@ -287,7 +311,8 @@ efsa_00 <- efsa_00 %>%
 rm(t1)
 
 efsa_00 <- efsa_00 %>% 
-  mutate(familiarity.pesticide = ifelse(efsa_raw$Q13.11+efsa_raw$Q13.12==1,1,0))
+  mutate(familiarity.pesticide = ifelse(efsa_raw$Q13.11+efsa_raw$Q13.12==1,1,
+                                        ifelse(efsa_raw$Q13.11+efsa_raw$Q13.12==2,0,NA)))
 
 ##viewing time
 efsa_00 <- efsa_00 %>% 
@@ -309,17 +334,17 @@ efsa_00 <- efsa_00 %>%
 
 ##perceived independence
 efsa_00 <- efsa_00 %>% 
-  mutate(idependence.polit.efsa = efsa_raw$Q10.2-6,
-         idependence.polit.eea = efsa_raw$Q12.5_1-6,
-         idependence.polit.ema = efsa_raw$Q12.5_3-6,
-         idependence.polit.echa = efsa_raw$Q12.5_4-6,
+  mutate(idependence.polit.efsa = (efsa_raw$Q10.2-6)*-1,
+         idependence.polit.eea = (efsa_raw$Q12.5_1-6)*-1,
+         idependence.polit.ema = (efsa_raw$Q12.5_3-6)*-1,
+         idependence.polit.echa = (efsa_raw$Q12.5_4-6)*-1,
          
-         idependence.industry.efsa = efsa_raw$Q10.3-6,
-         idependence.industry.eea = efsa_raw$Q12.6_1-6,
-         idependence.industry.ema = efsa_raw$Q12.6_3-6,
-         idependence.industry.echa = efsa_raw$Q12.6_4-6) %>%
+         idependence.industry.efsa = (efsa_raw$Q10.3-6)*-1,
+         idependence.industry.eea = (efsa_raw$Q12.6_1-6)*-1,
+         idependence.industry.ema = (efsa_raw$Q12.6_3-6)*-1,
+         idependence.industry.echa = (efsa_raw$Q12.6_4-6)*-1) %>%
   
-  mutate_at(vars(starts_with("idependence.")),funs(Recode(.,"-6=NA")))
+  mutate_at(vars(starts_with("idependence.")),list(~Recode(.,"6=NA")))
 
 
 #Outcome variable
@@ -330,7 +355,7 @@ efsa_00 <- efsa_00 %>%
          credibility.pest.q4 = efsa_raw$Q9.5 - 6,
          credibility.pest.q5 = efsa_raw$Q9.6 - 6,
          credibility.pest.q6 = efsa_raw$Q9.7 - 6) %>%
-  mutate_at(vars(starts_with("credibility.pest.")),funs(Recode(.,"-6=NA"))) %>% 
+  mutate_at(vars(starts_with("credibility.pest.")),list(~Recode(.,"-6=NA"))) %>% 
 
   mutate(credibility.efsa.post = efsa_raw$Q10.4 - 6) %>%
   mutate(credibility.efsa.post = credibility.efsa.post %>% na_if(-6)) 
@@ -348,7 +373,7 @@ efsa_00 <- efsa_00 %>%
          reputation.efsa.q10 = efsa_raw$Q10.14 -6,
          reputation.efsa.q11 = efsa_raw$Q10.15 -6,
          reputation.efsa.open = efsa_raw$Q11.1) %>% 
-mutate_at(vars(starts_with("reputation.efsa.")),funs(Recode(.,"-6=NA")))
+mutate_at(vars(starts_with("reputation.efsa.")),list(~Recode(.,"-6=NA")))
 
 efsa_00 <- efsa_00 %>%
   mutate(open.text = efsa_raw$Q13.15)
