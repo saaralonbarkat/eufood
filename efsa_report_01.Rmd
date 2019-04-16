@@ -51,6 +51,7 @@ library(ggthemes)
 library(corrr)
 library(kableExtra)
 library(dotwhisker)
+library(sjmisc)
 ```
 
 
@@ -103,8 +104,8 @@ Based on EFSA's conclusions, the pesticide Flupyradifurone has been approved.
 
 #Response rate
 ```{r}
-n.invitations = 156
-n.errors = 6
+n.invitations = 675
+n.errors = 45
 n.invitations_effective = n.invitations-n.errors
 
 n.open.link = efsa_raw_00 %>% nrow()
@@ -161,25 +162,28 @@ ggplot(aes(reorder(category,n,desc),n))+
 
 ```{r,fig.width=6}
 efsa_00 <- efsa_00 %>% 
-  mutate(timer = (end.date-start.date) %>% as.numeric(),
-         x=1) 
+  mutate(timer = ((end.date-start.date)%>%as.numeric())/60,
+         x=1)
 
 
   efsa_00 %>% 
-  filter(timer<=360) %>% 
+  filter(timer<=90) %>% 
     drop_na(comprehension.check) %>%
 ggplot(aes(x=x,y=timer))+
-  geom_boxplot(width = 0.1)+
-  geom_jitter(height = 0.2,width = 0 ,size=2,colour="dodgerblue2",alpha=0.6)+
-    scale_y_continuous(name = "Minutes",breaks = seq(0,3600,5))+
+  geom_boxplot(width = 0.1,
+               outlier.colour = "white")+
+  geom_jitter(height = 0.2,
+              width = 0.5,
+              size=2,
+              colour="dodgerblue2",
+              alpha=0.6)+
+    scale_y_continuous(name = "Minutes",breaks = seq(0,3600,5),limits = c(0,90))+
     scale_x_discrete(name = "")+
   ggtitle("Completion time of Survey")+
   coord_flip()+
   theme_tufte()
  
 ```
-
-
 
 
 
@@ -211,37 +215,40 @@ sjp.frq(efsa_00.s$condition,
 **Real dataset**
 <br>
 Now, the real data:
-```{r}
+```{r, echo=FALSE,warning=FALSE,message=FALSE, out.width=c('50%', '50%'),fig.show='hold', fig.width=5}
+
+set_theme(
+  base=theme_tufte(),
+  geom.outline.size = 0.01,
+  geom.outline.color = "white", 
+  geom.label.size = 3,
+  geom.label.color = "grey50")
+
+
 sjp.frq(efsa_00$treatment,
-        ylim = c(0,nrow(efsa_00)),
+        ylim = c(0,nrow(efsa_00)*0.75),
         axis.title = "",
         geom.size = 0.65,
         geom.colors = alpha("dodgerblue2",0.8),
         axis.labels = c("Control","Treatment"),
         title = "Independence treatment")+ 
   theme_tufte()
-```
-
-
-Pesticide case
-```{r}
 
 sjp.frq(efsa_00$high.risk,
-        ylim = c(0,nrow(efsa_00)),
+        ylim = c(0,nrow(efsa_00)*0.75),
         axis.title = "",
         geom.size = 0.65,
         geom.colors = alpha("dodgerblue2",0.8),
         axis.labels = c("Low risk","High risk"),
         title = "Pesticide case")+ 
   theme_tufte()
-
 ```
 
 <br>
 
 ```{r}
 sjp.frq(efsa_00$condition,
-        ylim = c(0,nrow(efsa_00)),
+        ylim = c(0,nrow(efsa_00)*0.5),
         axis.title = "",
         geom.size = 0.65,
         geom.colors = alpha("dodgerblue2",0.8))+
@@ -259,28 +266,21 @@ sjp.frq(efsa_00$condition,
 
 ##Demographics
 
-**Age**
-
-[measured by 10 years intervals]
 
 <br>
-```{r}
+```{r, echo=FALSE,warning=FALSE,message=FALSE, out.width=c('50%', '50%'),fig.show='hold', fig.width=5}
+
 sjp.frq(efsa_00$age,
         ylim = c(0,nrow(efsa_00)/2),
         geom.colors = alpha("dodgerblue2",0.8),
-        title = "Participant age group")+ 
+        title = "Age (group)")+ 
   theme_tufte()
-```
 
-
-**Gender**
-<br>
-```{r}
 sjp.frq(efsa_00$female,
         ylim = c(0,nrow(efsa_00)),
         geom.colors = alpha("dodgerblue2",0.8),
         axis.labels = c("Male","Female"),
-        title = "Participant gender")+ 
+        title = "Gender")+ 
   theme_tufte()
 ```
 
@@ -311,7 +311,7 @@ select(efsa_00,1) %>%
          native.language.Italian = ifelse(efsa_raw$Q13.8_5==1,1,NA),
          native.language.Dutch = ifelse(efsa_raw$Q13.8_6==1,1,NA),
          native.language.Portuguese = ifelse(efsa_raw$Q13.8_7==1,1,NA),
-         native.language.other = efsa_raw$Q13.8_8_TEXT) ->
+         native.language.other = efsa_raw$Q13.8_8_TEXT %>% str_to_lower()) ->
     t1
 
 t2 <- data.frame(language = c("English",
@@ -334,7 +334,7 @@ t2 <- data.frame(language = c("English",
 
 ggplot(t2,aes(reorder(language,n,desc),n))+
   geom_bar(stat="identity",width = 0.75,fill="dodgerblue2",alpha=0.8)+
-  scale_y_continuous(limits = c(0,nrow(t1)/4),breaks = 1:20)+
+  scale_y_continuous(limits = c(0,nrow(t1)/6),breaks = seq(5,200,5))+
   scale_x_discrete(name = "")+
   coord_flip()+
   theme_tufte()
@@ -345,7 +345,7 @@ ggplot(t2,aes(reorder(language,n,desc),n))+
 
 Other langauges:
 ```{r}
-filter(t1,!(native.language.other %in% c(0,1,NA)))$native.language.other %>% 
+  filter(t1,!(native.language.other %in% c(0,1,NA)))$native.language.other %>% 
   frq(out="v")
 ```
 
@@ -386,7 +386,7 @@ t2 <- data.frame(area = c("Environment",
 
 ggplot(t2,aes(reorder(area,n,desc),n))+
   geom_bar(stat="identity",width = 0.75,fill="dodgerblue2",alpha=0.8)+
-  scale_y_continuous(breaks = seq(0,nrow(t1),5))+
+  scale_y_continuous(limits = c(0,nrow(t1)*0.75),breaks = seq(0,200,20))+
   scale_x_discrete(name = "")+
   coord_flip()+
   theme_tufte()
@@ -396,18 +396,16 @@ ggplot(t2,aes(reorder(area,n,desc),n))+
 
 **Organization type**
 ```{r, fig.width=6}
-
 efsa_00 %>% 
   group_by(organization.type.raw) %>% 
   tally() %>% 
   
   ggplot(aes(reorder(organization.type.raw,n,desc),n))+
   geom_bar(stat="identity",width = 0.75,fill="dodgerblue2",alpha=0.8)+
-  scale_y_continuous(breaks = seq(0,nrow(efsa_00),1))+
+  scale_y_continuous(limits = c(0,nrow(t1)*0.40),breaks = seq(0,200,10))+
   scale_x_discrete(name = "")+
   coord_flip()+
   theme_tufte()
-
 ```
 
 
@@ -458,12 +456,12 @@ To what extent do you perceive these agencies to be credible regulators?
 ```{r}
 
 efsa_00 %>% 
-  select(credibility.eea.pre,
-         credibility.efsa.pre,
+  select(credibility.efsa.pre,
+         credibility.eea.pre,
          credibility.ema.pre,
          credibility.echa.pre) %>% 
   gather() %>% 
-  mutate(key = key %>% Recode("'credibility.eea.pre' = 'EEA';'credibility.efsa.pre' = 'EFSA'; 'credibility.ema.pre' = 'EMA';'credibility.echa.pre' = 'ECHA'")) %>% 
+  mutate(key = key %>% Recode("'credibility.efsa.pre' = 'EFSA';'credibility.eea.pre' = 'EEA'; 'credibility.ema.pre' = 'EMA';'credibility.echa.pre' = 'ECHA'")) %>% 
 ggplot(aes(x=value,fill=key))+geom_bar(fill="dodgerblue2",width = 0.75,alpha=0.8)+
   scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
   guides(fill=FALSE)+
@@ -475,8 +473,8 @@ ggplot(aes(x=value,fill=key))+geom_bar(fill="dodgerblue2",width = 0.75,alpha=0.8
 
 ```{r}
 efsa_00 %>% 
-select(credibility.eea.pre,
-       credibility.efsa.pre,
+select(credibility.efsa.pre,
+       credibility.eea.pre,
        credibility.ema.pre,
        credibility.echa.pre) %>% 
   sjt.corr(triangle = "lower",show.p=T,p.numeric=T)
@@ -541,11 +539,39 @@ ggplot(aes(greediness.food.industry,
   ggtitle("")+
   theme_tufte()
 ```
+<br>
+
+```{r, echo=FALSE,warning=FALSE,message=FALSE, out.width=c('50%', '50%'),fig.show='hold', fig.width=5}
+
+efsa_00 %>% 
+  ggplot(aes(credibility.efsa.pre,
+           supports.pesticides))+
+  geom_smooth(method="lm",colour="black")+
+  scale_x_continuous(name="EFSA credibility (pre-manipulation)",breaks=-5:5)+
+  scale_y_continuous(name = "Supports pesticides",breaks=-5:5,limits = c(-5.5,5))+
+  ggtitle("")+
+  theme_tufte()
+
+efsa_00 %>% 
+drop_na(credibility.efsa.pre)%>%
+  ggplot(aes(factor(credibility.efsa.pre),
+           supports.pesticides))+
+    geom_boxplot(width = 0.5,
+               outlier.colour = "white")+  
+  geom_jitter(width = 0.1,height = 0.1,size=1,colour="dodgerblue2",alpha=0.5)+
+  xlab("EFSA credibility (pre-manipulation)")+
+  scale_y_continuous(name = "Supports pesticides",breaks=-5:5)+
+  ggtitle("")+
+  theme_tufte()
+
+```
+
 
 <br>
 ```{r}
 efsa_00 %>% 
-select(greediness.industry,
+select(credibility.efsa.pre,
+       greediness.industry,
        greediness.food.industry,
        supports.gmo,
        supports.pesticides,
@@ -585,13 +611,28 @@ sjp.frq(efsa_00$prior.beliefs.food,
 
 <br>
 ```{r, fig.width=6}
-ggplot(efsa_00,aes(prior.beliefs.food,organization.type.raw))+
-  geom_jitter(height = 0,size=2,colour="dodgerblue2",alpha=0.6)+
-  scale_x_continuous(name="Index - prior beliefs about food industry",limits = c(-6,6),breaks = -5:5)+
+ggplot(efsa_00,aes(organization.type.raw,prior.beliefs.food))+
+  geom_boxplot(width = 0.5,
+               outlier.colour = "white")+  
+  geom_jitter(width = 0.2, height = 0,size=1,colour="dodgerblue2",alpha=0.6)+
+  xlab("Organization type")+
+  scale_y_continuous(name="Index - prior beliefs about food industry",limits = c(-6,6),breaks = -5:5)+
+  coord_flip()+
   theme_tufte()
   
 ```
-
+<br>
+```{r, fig.width=6}
+ggplot(efsa_00,aes(organization.type.raw,supports.pesticides))+
+  geom_boxplot(width = 0.5,
+               outlier.colour = "white")+  
+  geom_jitter(width = 0.2, height = 0.2,size=1,colour="dodgerblue2",alpha=0.6)+
+  xlab("Organization type")+
+  scale_y_continuous(name="Supports pesticides",limits = c(-6,6),breaks = -5:5)+
+  coord_flip()+
+  theme_tufte()
+  
+```
 <br>
 
 ##Relations with efsa (and other agencies)
@@ -620,7 +661,7 @@ efsa_00 %>%
   select(affect.decisions.eea:affect.decisions.efsa) %>% 
   gather() %>% 
   mutate(key = key %>% Recode("'affect.decisions.eea' = 'EEA';'affect.decisions.ema' = 'EMA';'affect.decisions.echa' = 'ECHA';'affect.decisions.efsa' = 'EFSA'")) %>% 
-ggplot(aes(x=value,fill=key))+
+ggplot(aes(x=value))+
   geom_bar(fill="dodgerblue2",width = 0.75,alpha=0.8)+
   scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
   guides(fill=FALSE)+
@@ -637,7 +678,7 @@ efsa_00 %>%
   drop_na()%>% 
   gather() %>% 
   mutate(key = key %>% Recode("'interact.eea' = 'EEA';'interact.ema' = 'EMA';'interact.echa' = 'ECHA';'interact.efsa' = 'EFSA'")) %>% 
-ggplot(aes(x=value,fill=key))+
+ggplot(aes(x=value))+
   geom_bar(fill="dodgerblue2",width = 0.75,alpha=0.8)+
   #scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
   guides(fill=FALSE)+
@@ -653,19 +694,23 @@ ggplot(aes(x=value,fill=key))+
 
 ###Perceived independece
 <br>
+[The following questions are reversed, so that 5 = high independence and -5 = low independnce]
+
+<br>
+
 
 The agency's opinions can be influenced by EU political institutions (European Commission, Council, Parliament).
 ```{r}
 efsa_00 %>% 
-  select(idependence.polit.efsa:idependence.polit.echa) %>% 
-  gather() %>% 
+  select(idependence.polit.efsa:idependence.polit.echa) %>%   gather() %>% 
   mutate(key = key %>% Recode("'idependence.polit.eea' = 'EEA';'idependence.polit.ema' = 'EMA';'idependence.polit.echa' = 'ECHA';'idependence.polit.efsa' = 'EFSA'")) %>% 
-ggplot(aes(x=value,fill=key))+
+ggplot(aes(x=value))+
   geom_bar(fill="dodgerblue2",width = 0.75,alpha=0.8)+
   scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
   guides(fill=FALSE)+
   facet_wrap(~key)+
   theme_tufte()
+
 ```
 
 <br>
@@ -691,10 +736,36 @@ efsa_00 %>%
   sjt.corr(triangle = "lower",show.p=T,p.numeric=T)
 ```
 <br>
+
+```{r, fig.width=6}
+ggplot(efsa_00,aes(organization.type.raw,idependence.polit.efsa))+
+  geom_boxplot(width = 0.5,
+               outlier.colour = "white")+  
+  geom_jitter(width = 0.2, height = 0.2,size=1,colour="dodgerblue2",alpha=0.6)+
+  xlab("Organization type")+
+  scale_y_continuous(name="Independence from politicians (5=high)",limits = c(-6,6),breaks = -5:5)+
+  coord_flip()+
+  theme_tufte()
+  
+```
+<br>
+```{r, fig.width=6}
+ggplot(efsa_00,aes(organization.type.raw,idependence.industry.efsa))+
+  geom_boxplot(width = 0.5,
+               outlier.colour = "white")+  
+  geom_jitter(width = 0.2, height = 0.2,size=1,colour="dodgerblue2",alpha=0.6)+
+  xlab("Organization type")+
+  scale_y_continuous(name="Independence from industry (5=high)",limits = c(-6,6),breaks = -5:5)+
+  coord_flip()+
+  theme_tufte()
+  
+```
+<br>
+
 ```{r, fig.width=8}
 ggplot(efsa_00,aes(efsa_00$idependence.polit.efsa,
-         efsa_00$idependence.industry.efsa,color=organization.type.raw))+
-  geom_jitter(width = 0.05,height = 0.05,size=2,alpha=0.5)+
+         efsa_00$idependence.industry.efsa))+
+  geom_jitter(width = 0.1,height = 0.1,size=2,colour="dodgerblue2",alpha=0.6)+
   geom_smooth(method="lm",colour="black",group=1)+
   scale_x_continuous(name="Independence from political stakeholders",breaks=-5:5)+
   scale_y_continuous(name="Independence from industry",breaks=-5:5)+
@@ -785,7 +856,7 @@ t1 <- efsa_00 %>%
 
 ggplot(t1,aes(x=key,y=value))+
   geom_boxplot()+
-  geom_jitter(height = 0.1,width = 0 ,size=1,colour="dodgerblue2",alpha=0.6)+
+  #geom_jitter(height = 0.1,width = 0 ,size=1,colour="dodgerblue2",alpha=0.6)+
   ggtitle("Credibility of decision")+
   scale_y_continuous(limits = c(-5,5),breaks=-5:5)+
   coord_flip()+
@@ -795,14 +866,16 @@ ggplot(t1,aes(x=key,y=value))+
 
 ###Credibility of EFSA
 <br>
-EFSA is a credible regulator.
+* Post manipulation: EFSA is a credible regulator.
+* Credible commitment: EFSA follows a stable and consistent approach in its risk assessment.
 <br>
 ```{r}
 efsa_00 %>% 
   select(credibility.efsa.pre,
-         credibility.efsa.post) %>% 
+         credibility.efsa.post,
+         credibility.efsa.post.commitment) %>% 
   gather() %>%
-  mutate(key = key %>% Recode("'credibility.efsa.pre' = 'Pre-manipulation';'credibility.efsa.post' = 'Post-manipulation'")) %>%
+  mutate(key = key %>% Recode("'credibility.efsa.pre' = 'Pre-manipulation';'credibility.efsa.post' = 'Post-manipulation';'credibility.efsa.post.commitment'='Credible commitment'")) %>%
 ggplot(aes(x=value,fill=key))+
   geom_bar(fill="dodgerblue2",width = 0.75,alpha=0.8)+
   scale_x_continuous(limits = c(-6,6),breaks = -5:5)+
@@ -821,12 +894,14 @@ ggplot(efsa_00,aes(efsa_00$credibility.efsa.pre,
   scale_y_continuous(name="Post-manipulation",breaks=-5:5)+
   theme_tufte()
 ```
-<br>
 
+
+<br>
 ```{r}
 efsa_00 %>% 
   select(credibility.efsa.pre,
          credibility.efsa.post,
+         credibility.efsa.post.commitment,
          credibility.pest.commitment:credibility.pest.expertise) %>% 
   sjt.corr(triangle = "lower",show.p=T,p.numeric=T)
 ```

@@ -33,8 +33,13 @@ library(lubridate)
 
 
 #loading raw data CSV file
-efsa_raw_00 <- read_csv("C:/SAAR/UNIVERSITY/R/EFSA/data/efsa_data.csv")
+efsa_raw_old <- read_csv("C:/SAAR/UNIVERSITY/R/EFSA/data/efsa_data_old.csv") %>% 
+  mutate(Q105=NA)
+efsa_raw_new <- read_csv("C:/SAAR/UNIVERSITY/R/EFSA/data/efsa_data_new.csv") %>% 
+  mutate(survey.name = NA)
 
+efsa_raw_00 <- rbind(efsa_raw_old,
+                     efsa_raw_new)
 
 #removing observations that did not complete any question in the survey. 
   efsa_raw_00 %>% 
@@ -220,7 +225,8 @@ efsa_00 <- efsa_00 %>%
                                                           4='professional association';
                                                           5='non-governmental nonprofit organization';
                                                           6='research institute';
-                                                          7='other'"))
+                                                          7='other';
+                                                          8='Law firm'"))
 
 #Attitudes about EU agencies
 efsa_00 <- efsa_00 %>% 
@@ -334,17 +340,20 @@ efsa_00 <- efsa_00 %>%
 
 ##perceived independence
 efsa_00 <- efsa_00 %>% 
-  mutate(idependence.polit.efsa = (efsa_raw$Q10.2-6)*-1,
-         idependence.polit.eea = (efsa_raw$Q12.5_1-6)*-1,
+  mutate(idependence.polit.eea = (efsa_raw$Q12.5_1-6)*-1,
          idependence.polit.ema = (efsa_raw$Q12.5_3-6)*-1,
          idependence.polit.echa = (efsa_raw$Q12.5_4-6)*-1,
          
-         idependence.industry.efsa = (efsa_raw$Q10.3-6)*-1,
          idependence.industry.eea = (efsa_raw$Q12.6_1-6)*-1,
          idependence.industry.ema = (efsa_raw$Q12.6_3-6)*-1,
          idependence.industry.echa = (efsa_raw$Q12.6_4-6)*-1) %>%
   
-  mutate_at(vars(starts_with("idependence.")),list(~Recode(.,"6=NA")))
+  mutate_at(vars(starts_with("idependence.")),list(~Recode(.,"6=NA; -6=0"))) %>% 
+  
+mutate(idependence.polit.efsa = (efsa_raw$Q10.2-6)*-1,
+       idependence.industry.efsa = (efsa_raw$Q10.3-6)*-1) %>% 
+  mutate(idependence.polit.efsa = idependence.polit.efsa %>% na_if(6),
+         idependence.industry.efsa = idependence.industry.efsa %>% na_if(6))
 
 
 #Outcome variable
@@ -357,8 +366,10 @@ efsa_00 <- efsa_00 %>%
          credibility.pest.q6 = efsa_raw$Q9.7 - 6) %>%
   mutate_at(vars(starts_with("credibility.pest.")),list(~Recode(.,"-6=NA"))) %>% 
 
-  mutate(credibility.efsa.post = efsa_raw$Q10.4 - 6) %>%
-  mutate(credibility.efsa.post = credibility.efsa.post %>% na_if(-6)) 
+  mutate(credibility.efsa.post = efsa_raw$Q10.4 - 6,
+         credibility.efsa.post.commitment = efsa_raw$Q105 - 6) %>%
+  mutate_at(vars(starts_with("credibility.efsa.post")),list(~Recode(.,"-6=NA")))
+
 
 efsa_00 <- efsa_00 %>% 
   mutate(reputation.efsa.q1 = efsa_raw$Q10.5 -6,
