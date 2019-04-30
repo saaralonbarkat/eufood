@@ -436,9 +436,9 @@ Grouping organizations to three groups:
 ```{r, fig.width=6}
 efsa_00 <- efsa_00 %>% 
   mutate(organization.type.short = organization.type.raw %>% 
-           Recode("'non-governmental nonprofit organization'='ngo';
-                  c('trade association','company')='industry';
-                  else='other'"))
+           Recode("'non-governmental nonprofit organization'='2-ngo';
+                  c('trade association','company')='1-industry';
+                  else='0-other'"))
 
 sjp.frq(efsa_00$organization.type.short,
         ylim = c(0,nrow(efsa_00)*0.6),
@@ -720,7 +720,7 @@ ggplot(efsa_00,aes(organization.type.short,credibility.efsa.pre))+
     stat_summary(fun.data = mean_cl_normal, geom = "errorbar", colour = "red",alpha=0.5,width=0.1,size=1) + 
   stat_summary(fun.y = mean, geom = "point", colour = "red",alpha=0.5,size=2)+
  xlab("Organization type")+
-  scale_y_continuous(name="Perceived greediness of food industry",limits = c(-6,6),breaks = -5:5)+
+  scale_y_continuous(name="EFSA credibility (pre)",limits = c(-6,6),breaks = -5:5)+
   coord_flip()+
   theme_tufte()
   
@@ -1655,27 +1655,45 @@ ggplot(aes(idependence.industry.efsa,fill=factor(ban.pesticide.lab)))+
 <br>
 
 #Outcome variables
+<br>
+
+##Filtering
+<br>
+
+```{r}
+efsa_01 <- efsa_00 %>% 
+  filter(comprehension.check==1)
+
+efsa_02 <- efsa_00 %>% 
+  filter(comprehension.check==1,
+         familiarity.pesticide==0)
+```
+
 
 ##Model for credibility
 <br>
 
 ```{r}
-efsa_00 %>% 
+efsa_01 %>% 
   drop_na(ban.pesticide) %>% 
 ggplot(aes(x=ban.pesticide.lab,y=credibility.pest.index))+
   geom_boxplot()+
   geom_jitter(height = 0.1,width = 0 ,size=1,colour="dodgerblue2",alpha=0.6)+
+  stat_summary(fun.data = mean_cl_normal, geom = "errorbar", colour = "red",alpha=0.5,width=0.1,size=1) + 
+  stat_summary(fun.y = mean, geom = "point", colour = "red",size=2)+
+  stat_summary(fun.y = mean, geom = "line", colour = "red",alpha=0.5,size=1, aes(group = 1))+
+
     scale_y_continuous(name = "Decision creibility",breaks=-5:5)+
   ggtitle("Credibility of decision")+
-  coord_flip()+
+  xlab("Case/decision")+
+  #coord_flip()+
   theme_tufte()
 ```
 
 <br>
 ```{r,fig.width=6}
-t1 <- efsa_00 %>% 
+t1 <- efsa_01 %>% 
   select(credibility.pest.index,
-         ban.pesticide,
          ban.pesticide,
          female,
          age,
@@ -1694,7 +1712,7 @@ t1.1 = t1 %>%
   correlate() %>% 
   focus(credibility.pest.index) %>%
   mutate(rowname = reorder(rowname, credibility.pest.index)) %>%
-  mutate(ban.pesticide.lab = "Decision: ban pesticide")
+  mutate(ban.pesticide.lab = "Ban pesticide")
 
 
 t1.2 = t1 %>%
@@ -1703,7 +1721,7 @@ t1.2 = t1 %>%
   correlate() %>% 
   focus(credibility.pest.index) %>%
   mutate(rowname = reorder(rowname, credibility.pest.index)) %>%
-  mutate(ban.pesticide.lab = "Low risk")
+  mutate(ban.pesticide.lab = "Approve pesticide")
 
 t2 = rbind(t1.1,t1.2) %>% data.frame()
 
@@ -1719,38 +1737,58 @@ ggplot(aes(rowname, credibility.pest.index,fill=ban.pesticide.lab)) +
 
 
 ```
-
-
-
 <br>
 ```{r}
-model.pest.credibility.lowrisk <- lm(credibility.pest.index~ 
+model.pest.credibility.approve <- lm(credibility.pest.index~ 
          credibility.efsa.pre+
          supports.pesticides+
-         greediness.food.industry+
-           greediness.industry,
-         data=filter(efsa_00,ban.pesticide==0))
+         greediness.food.industry,
+         data=filter(efsa_01,ban.pesticide==0))
 
-model.pest.credibility.highrisk <- lm(credibility.pest.index~ 
+model.pest.credibility.ban <- lm(credibility.pest.index~ 
          credibility.efsa.pre+
          supports.pesticides+
-         greediness.food.industry+
-           greediness.industry,
-         data=filter(efsa_00,ban.pesticide==1))
+         greediness.food.industry,
+         data=filter(efsa_01,ban.pesticide==1))
 
-dwplot(list(LowRisk=model.pest.credibility.lowrisk,HighRisk=model.pest.credibility.highrisk),
+dwplot(list(Approve.pesticide=model.pest.credibility.approve,Ban.pesticide=model.pest.credibility.ban),
        vline = geom_vline(xintercept = 0, colour = "grey60", linetype = 2))+
   scale_color_manual(values = viridis(3))+
   theme_tufte()
 ```
 
+
+<br>
+```{r}
+model.pest.credibility.approve <- lm(credibility.pest.index~ 
+         credibility.efsa.pre+
+         supports.pesticides+
+         greediness.food.industry+
+           #greediness.industry+
+           organization.type.short,
+         data=filter(efsa_01,ban.pesticide==0))
+
+model.pest.credibility.ban <- lm(credibility.pest.index~ 
+         credibility.efsa.pre+
+         supports.pesticides+
+         greediness.food.industry+
+           #greediness.industry+
+           organization.type.short,
+         data=filter(efsa_01,ban.pesticide==1))
+
+dwplot(list(Approve.pesticide=model.pest.credibility.approve,Ban.pesticide=model.pest.credibility.ban),
+       vline = geom_vline(xintercept = 0, colour = "grey60", linetype = 2))+
+  scale_color_manual(values = viridis(3))+
+  theme_tufte()
+```
 <br>
 ```{r,fig.width=6}
-efsa_00 %>% 
+efsa_01 %>% 
   drop_na(ban.pesticide) %>% 
 ggplot(aes(credibility.efsa.pre,
-           credibility.pest.index))+
-  geom_jitter(width = 0.05,height = 0.05,size=2,colour="dodgerblue2",alpha=0.5)+
+           credibility.pest.index,
+           color=organization.type.short))+
+  geom_jitter(width = 0.05,height = 0.05,size=2,alpha=0.5)+
   geom_smooth(method="lm",colour="black")+
   scale_x_continuous(name="Credibility of EFSA (pre manipulation)",breaks=-5:5)+
   scale_y_continuous(name = "Decision creibility",breaks=-5:5)+
@@ -1760,11 +1798,12 @@ ggplot(aes(credibility.efsa.pre,
 ```
 <br>
 ```{r,fig.width=6}
-efsa_00 %>% 
+efsa_01 %>% 
   drop_na(ban.pesticide) %>% 
 ggplot(aes(supports.pesticides,
-           credibility.pest.index))+
-  geom_jitter(width = 0.05,height = 0.05,size=2,colour="dodgerblue2",alpha=0.5)+
+           credibility.pest.index,
+           color=organization.type.short))+
+  geom_jitter(width = 0.05,height = 0.05,size=2,alpha=0.5)+
   geom_smooth(method="lm",colour="black")+
   scale_x_continuous(name="supports.pesticides",breaks=-5:5)+
   scale_y_continuous(name = "Decision creibility",breaks=-5:5)+
@@ -1774,25 +1813,12 @@ ggplot(aes(supports.pesticides,
 ```
 <br>
 ```{r,fig.width=6}
-efsa_00 %>% 
-  drop_na(ban.pesticide) %>% 
-ggplot(aes(supports.pesticides,
-           credibility.pest.index))+
-  geom_jitter(width = 0.05,height = 0.05,size=2,colour="dodgerblue2",alpha=0.5)+
-  geom_smooth(method="lm",colour="black")+
-  scale_x_continuous(name="supports.pesticides",breaks=-5:5)+
-  scale_y_continuous(name = "Decision creibility",breaks=-5:5)+
-  ggtitle("")+
-  facet_wrap(~ban.pesticide.lab)+
-  theme_tufte()
-```
-<br>
-```{r,fig.width=6}
-efsa_00 %>% 
+efsa_01 %>% 
   drop_na(ban.pesticide) %>% 
 ggplot(aes(greediness.food.industry,
-           credibility.pest.index))+
-  geom_jitter(width = 0.05,height = 0.05,size=2,colour="dodgerblue2",alpha=0.5)+
+           credibility.pest.index,
+           color=organization.type.short))+
+  geom_jitter(width = 0.05,height = 0.05,size=2,alpha=0.5)+
   geom_smooth(method="lm",colour="black")+
   scale_x_continuous(name="Perceived greediness of food industry (5=high)",breaks=-5:5)+
   scale_y_continuous(name = "Decision creibility",breaks=-5:5)+
@@ -1801,13 +1827,27 @@ ggplot(aes(greediness.food.industry,
   theme_tufte()
 ```
 <br>
+```{r}
+efsa_01 %>% 
+  drop_na(credibility.pest.index) %>% 
+ggplot(aes(x=organization.type.short,y=credibility.pest.index))+
+  geom_boxplot(width = 0.5,
+               outlier.colour = "white")+
+  geom_jitter(height = 0.1,width = 0.1 ,size=1,colour="dodgerblue2",alpha=0.6)+
+    scale_y_continuous(name="Independence of EFSA from political stakeholders",limits = c(-5,5),breaks=-5:5)+
+  xlab("")+
+  stat_summary(fun.data = mean_cl_normal, geom = "errorbar", colour = "red",alpha=0.5,width=0.1,size=1) + 
+  stat_summary(fun.y = mean, geom = "point", colour = "red",size=2)+
+  facet_wrap(~ban.pesticide.lab)+
+  theme_tufte()
+```
 
-
+<br>
 
 ##Effect of treatment on credibility
 <br>
 ```{r,fig.width=6}
-t1 <- efsa_00 %>% 
+t1 <- efsa_01 %>% 
   select(ban.pesticide,
          idependence.polit.efsa,
          treatment,
@@ -1822,7 +1862,7 @@ t1.1 = t1 %>%
   correlate() %>% 
   focus(treatment) %>%
   #mutate(rowname = reorder(rowname, treatment)) %>%
-  mutate(ban.pesticide.lab = "Decision: ban pesticide")
+  mutate(ban.pesticide.lab = "Ban pesticide")
 
 
 t1.2 = t1 %>%
@@ -1831,7 +1871,7 @@ t1.2 = t1 %>%
   correlate() %>% 
   focus(treatment) %>%
   #mutate(rowname = reorder(rowname, treatment)) %>%
-  mutate(ban.pesticide.lab = "Low risk")
+  mutate(ban.pesticide.lab = "Approve pesticide")
 
 t2 = rbind(t1.1,t1.2) %>% data.frame()
 
@@ -1846,9 +1886,10 @@ ggplot(aes(rowname, treatment,fill=ban.pesticide.lab)) +
 ```
 <br>
 ```{r,fig.width=6}
-t1 <- efsa_00 %>% 
+t1 <- efsa_01 %>% 
   select(ban.pesticide,
          idependence.polit.efsa,
+         idependence.industry.efsa,
          treatment,
          credibility.pest.commitment:credibility.pest.expertise,
          credibility.efsa.pre,
@@ -1867,11 +1908,9 @@ ggplot(aes(rowname, ban.pesticide)) +
 ```
 
 
-
-
 <br>
 ```{r}
-efsa_00 %>% 
+efsa_01 %>% 
   drop_na(credibility.pest.index) %>% 
 ggplot(aes(x=treatment.lab,y=credibility.pest.index))+
   geom_boxplot()+
@@ -1888,7 +1927,7 @@ ggplot(aes(x=treatment.lab,y=credibility.pest.index))+
 <br>
 
 ```{r}
-efsa_00 %>% 
+efsa_01 %>% 
   drop_na(credibility.pest.index) %>% 
 ggplot(aes(x=treatment.lab,y=credibility.pest.index))+
   geom_boxplot()+
@@ -1911,7 +1950,7 @@ ggplot(aes(x=treatment.lab,y=credibility.pest.index))+
 
 **Decision: approve pesticide**
 ```{r}
-sjstats::grpmean(filter(efsa_00,ban.pesticide==0),
+sjstats::grpmean(filter(efsa_01,ban.pesticide==0),
                  credibility.pest.index,
                  treatment,
                  out="v")
@@ -1921,7 +1960,7 @@ sjstats::grpmean(filter(efsa_00,ban.pesticide==0),
 
 **Decision: ban pesticide**
 ```{r}
-sjstats::grpmean(filter(efsa_00,ban.pesticide==1),
+sjstats::grpmean(filter(efsa_01,ban.pesticide==1),
                  credibility.pest.index,
                  treatment,
                  out="v")
@@ -1930,7 +1969,7 @@ sjstats::grpmean(filter(efsa_00,ban.pesticide==1),
 <br>
 
 ```{r}
-efsa_00 %>% 
+efsa_01 %>% 
   drop_na(credibility.efsa.post) %>% 
 ggplot(aes(x=treatment.lab,y=credibility.efsa.post))+
   geom_boxplot()+
