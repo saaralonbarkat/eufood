@@ -68,7 +68,8 @@ efsa_00 <- efsa_00 %>%
                                        0=NA"),
          female = efsa_raw$Q13.3 %>% Recode("1=0;
                                           2=1;
-                                          3=NA"),
+                                          3=NA;
+                                          0=NA"),
          education = efsa_raw$Q13.4 %>% Recode("1='1 High-school';
                                               2='2 Bachlor';
                                               3='3 Master';
@@ -79,18 +80,18 @@ efsa_00 <- efsa_00 %>%
 #experiment groups
 efsa_00 <-
   efsa_00 %>%
-  mutate(t1 = efsa_raw$Q5.1 %>% Recode("1='low risk treatment'"),
-         t2 = efsa_raw$Q6.1 %>% Recode("1='high risk treatment'"),
-         t3 = efsa_raw$Q7.1 %>% Recode("1='low risk control'"),
-         t4 = efsa_raw$Q8.1 %>% Recode("1='high risk control'")) %>% 
+  mutate(t1 = efsa_raw$Q5.1 %>% Recode("1='approve-pesticide treatment'"),
+         t2 = efsa_raw$Q6.1 %>% Recode("1='ban-pesticide treatment'"),
+         t3 = efsa_raw$Q7.1 %>% Recode("1='approve-pesticide control'"),
+         t4 = efsa_raw$Q8.1 %>% Recode("1='ban-pesticide control'")) %>% 
   mutate(condition = paste0(t1,t2,t3,t4) %>% str_replace_all("NA|0","") %>% Recode("''=NA")) %>% 
   select(-t1,-t2,-t3,-t4) %>% 
  
   
   mutate(treatment = ifelse(str_detect(condition,"treatment")==T,1,
                             ifelse(str_detect(condition,"control")==T,0,NA)),
-         high.risk = ifelse(str_detect(condition,"high")==T,1,
-                            ifelse(str_detect(condition,"low")==T,0,NA)))
+         ban.pesticide = ifelse(str_detect(condition,"ban-")==T,1,
+                            ifelse(str_detect(condition,"approve-")==T,0,NA)))
 
 efsa_00 <- efsa_00 %>% 
   mutate(treatment.start = ifelse(efsa_raw$Q2.1==1,"treatment",
@@ -304,10 +305,10 @@ efsa_00 <- efsa_00 %>%
 
 
 ##compregension check
-efsa_00 %>% select(high.risk) %>% 
+efsa_00 %>% select(ban.pesticide) %>% 
   mutate(t1 = efsa_raw$Q13.9,
          t2 = efsa_raw$Q13.10) %>% 
-  mutate(comprehension.check = ifelse(high.risk==1&t2==1|high.risk==0&t1==2,1,
+  mutate(comprehension.check = ifelse(ban.pesticide==1&t2==1|ban.pesticide==0&t1==2,1,
                                       ifelse(t1==0&t2==0,NA,0))) -> 
   t1
 
