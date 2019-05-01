@@ -341,20 +341,20 @@ efsa_00 <- efsa_00 %>%
 
 ##perceived independence
 efsa_00 <- efsa_00 %>% 
-  mutate(idependence.polit.eea = (efsa_raw$Q12.5_1-6)*-1,
-         idependence.polit.ema = (efsa_raw$Q12.5_3-6)*-1,
-         idependence.polit.echa = (efsa_raw$Q12.5_4-6)*-1,
+  mutate(independence.polit.eea = (efsa_raw$Q12.5_1-6)*-1,
+         independence.polit.ema = (efsa_raw$Q12.5_3-6)*-1,
+         independence.polit.echa = (efsa_raw$Q12.5_4-6)*-1,
          
-         idependence.industry.eea = (efsa_raw$Q12.6_1-6)*-1,
-         idependence.industry.ema = (efsa_raw$Q12.6_3-6)*-1,
-         idependence.industry.echa = (efsa_raw$Q12.6_4-6)*-1) %>%
+         independence.industry.eea = (efsa_raw$Q12.6_1-6)*-1,
+         independence.industry.ema = (efsa_raw$Q12.6_3-6)*-1,
+         independence.industry.echa = (efsa_raw$Q12.6_4-6)*-1) %>%
   
-  mutate_at(vars(starts_with("idependence.")),list(~Recode(.,"6=NA; -6=0"))) %>% 
+  mutate_at(vars(starts_with("independence.")),list(~Recode(.,"6=NA; -6=0"))) %>% 
   
-mutate(idependence.polit.efsa = (efsa_raw$Q10.2-6)*-1,
-       idependence.industry.efsa = (efsa_raw$Q10.3-6)*-1) %>% 
-  mutate(idependence.polit.efsa = idependence.polit.efsa %>% na_if(6),
-         idependence.industry.efsa = idependence.industry.efsa %>% na_if(6))
+mutate(independence.polit.efsa = (efsa_raw$Q10.2-6)*-1,
+       independence.industry.efsa = (efsa_raw$Q10.3-6)*-1) %>% 
+  mutate(independence.polit.efsa = independence.polit.efsa %>% na_if(6),
+         independence.industry.efsa = independence.industry.efsa %>% na_if(6))
 
 
 #Outcome variable
