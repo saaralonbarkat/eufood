@@ -52,6 +52,8 @@ library(dotwhisker)
 library(sjmisc)
 library(interflex)
 library(effsize)
+library(broom)
+library(sjstats)
 ```
 
 # Data preperations
@@ -82,12 +84,10 @@ efsa_00 <- efsa_00 %>%
                                 supports.additives)/4)
 
 ##credibility aspects
-t1 <- efsa_00 %>% 
-  select(credibility.pest.q1:credibility.pest.q6) %>% 
-  mutate(credibility.pest.q2 = -1*credibility.pest.q2,
-         credibility.pest.q3 = -1*credibility.pest.q3,
-         credibility.pest.q6 = -1*credibility.pest.q6) %>%  
-  mutate(credibility.pest.index = (credibility.pest.q1+
+
+
+efsa_00 <- efsa_00 %>% 
+    mutate(credibility.pest.index = (credibility.pest.q1+
            credibility.pest.q2+
            credibility.pest.q3+
            credibility.pest.q4+
@@ -98,13 +98,7 @@ t1 <- efsa_00 %>%
            credibility.pest.q2+
            credibility.pest.q3)/3,
          credibility.pest.expertise = (credibility.pest.q4+
-           credibility.pest.q5)/2)
-
-efsa_00 <- efsa_00 %>% 
-  mutate(credibility.pest.commitment = t1$credibility.pest.commitment,
-         credibility.pest.considerations = t1$credibility.pest.considerations,
-         credibility.pest.expertise = t1$credibility.pest.expertise,
-         credibility.pest.index = t1$credibility.pest.index) %>% 
+           credibility.pest.q5)/2) %>% 
   mutate(credibility.pest.index.01 = (credibility.pest.commitment+
                                      credibility.pest.considerations+
                                      credibility.pest.expertise)/3)
@@ -327,6 +321,36 @@ q6: I believe that EFSA's opinion about the pesticide may change the next time i
 
 <br>
 
+
+```{r,fig.width=6}
+efsa_00 %>% 
+  drop_na(ban.pesticide) %>% 
+  select(credibility.pest.q1:credibility.pest.q6,
+         ban.pesticide.lab) %>% 
+  gather("key","value",-ban.pesticide.lab) %>% 
+  #mutate(key = Recode(key,"'credibility.pest.commitment'='Commitment';'credibility.pest.considerations'='Considerations';'credibility.pest.expertise'='Expertise';'credibility.pest.index' = 'Index'")) %>% 
+
+ggplot(aes(x=key,y=value,color=ban.pesticide.lab,shape=ban.pesticide.lab))+
+  geom_boxplot(width = 0.5)+
+      stat_summary(fun.data = mean_cl_normal, geom = "errorbar", fun.args=list(conf.int=0.90), colour = "red",alpha=0.5,width=0.1,size=1,position=position_dodge(0.5)) + 
+  stat_summary(fun.y = mean, geom = "point", colour = "red",alpha=0.5,size=2,position=position_dodge(0.5))+
+  scale_y_continuous(limits = c(-5,5),breaks=-5:5)+
+  scale_x_discrete(labels = c("q1","q2","q3","q4","q5","q6"))+
+  scale_shape_manual(name = "Case/decision", values=c(1,1),labels = c("Approve pesticide (Flup.)","Ban pesticide (amitrole)"))+
+  scale_color_manual(name = "Case/decision", values=c("gray10","gray50"),labels = c("Approve pesticide (Flup.)","Ban pesticide (amitrole)"))+
+  xlab("Credibility item")+
+  ylab("")+
+  theme_tufte()+
+    labs(title = "Fig. 5: Decision credibility by case",
+              subtitle = "",
+              caption = "Note: Red dots and bars represent means and 90% CIs")+
+  theme(
+  plot.caption = element_text(hjust = 0)
+  )
+```
+
+<br>
+
 ```{r,fig.width=6}
 efsa_00 %>% 
   drop_na(ban.pesticide) %>% 
@@ -504,13 +528,17 @@ dwplot(list(Ban.pesticide=tmod1, Approve.pesticide=tmod2
 
 <br>
 
+
+
+<br>
+
 ## **Treatment main effect**
 
 <br>
 
 * Independence treatment significanly increasese perceived independence of EFSA from politicians (*p* = `r t.test(independence.polit.efsa~treatment,efsa_00)[["p.value"]] %>% round(2)`, cohen's d = `r cohen.d(efsa_00$independence.polit.efsa~efsa_00$treatment)[["estimate"]] %>% abs() %>%  round(2)`), as well as percieved independence from industry (*p* = `r t.test(independence.industry.efsa~treatment,efsa_00)[["p.value"]] %>% round(2)`, cohen's d = `r cohen.d(efsa_00$independence.industry.efsa~efsa_00$treatment)[["estimate"]] %>% abs() %>%  round(2)`). The effect is similar for both decisions. **(Fig. 8)**
 
-* Independence treatment has no effect on credibility of ban decision. It has some positive effect on credibility of approve decision. The effect is significant on aspect of considerations (*p* = `r t.test(credibility.pest.considerations~treatment,efsa_00_approve.pest)[["p.value"]] %>% round(2)`, cohen's d = `r cohen.d(efsa_00_approve.pest$credibility.pest.considerations~efsa_00_approve.pest$treatment)[["estimate"]] %>% abs() %>%  round(2)`). It is positive but not significant on expertise (*p* = `r t.test(credibility.pest.expertise~treatment,efsa_00_approve.pest)[["p.value"]] %>% round(2)`). There is no effect on commitment. **(Fig. 9)** 
+* Independence treatment has no effect on credibility of ban decision. It has some positive effect on credibility of approve decision. The effect is significant on aspect of considerations (*p* = `r t.test(credibility.pest.considerations~treatment,efsa_00_approve.pest)[["p.value"]] %>% round(2)`, cohen's d = `r cohen.d(efsa_00_approve.pest$credibility.pest.considerations~efsa_00_approve.pest$treatment)[["estimate"]] %>% abs() %>%  round(2)`). It is positive but not significant on expertise (*p* = `r t.test(credibility.pest.expertise~treatment,efsa_00_approve.pest)[["p.value"]] %>% round(2)`, cohen's d = `r cohen.d(efsa_00_approve.pest$credibility.pest.expertise~efsa_00_approve.pest$treatment)[["estimate"]] %>% abs() %>%  round(2)`). There is no effect on commitment. **(Fig. 9)** 
 
 * The treatement effect on credibility (approve decision) is mediated by perceived independence from politicians and from industry. **(Table 3)** 
 
@@ -576,6 +604,40 @@ ggplot(aes(x=key,y=value,color=treatment.lab,shape=treatment.lab))+
 ```
 
 <br>
+
+```{r, fig.width=8}
+efsa_00 %>% 
+  drop_na(credibility.pest.index) %>% 
+  select(credibility.pest.q1:credibility.pest.q6,
+         treatment.lab,
+         ban.pesticide.lab) %>% 
+  gather("key","value",-treatment.lab,-ban.pesticide.lab) %>% 
+  #mutate(key = Recode(key,"'credibility.pest.commitment'='Commitment';'credibility.pest.considerations'='Considerations';'credibility.pest.expertise'='Expertise';'credibility.pest.index' = 'Index'")) %>% 
+
+ggplot(aes(x=key,y=value,color=treatment.lab,shape=treatment.lab))+
+  geom_boxplot(width = 0.5)+
+      stat_summary(fun.data = mean_cl_normal, geom = "errorbar", fun.args=list(conf.int=0.90), colour = "red",alpha=0.5,width=0.1,size=1,position=position_dodge(0.5)) + 
+  stat_summary(fun.y = mean, geom = "point", colour = "red",alpha=0.5,size=2,position=position_dodge(0.5))+
+  ggtitle("Credibility of decision")+
+  scale_y_continuous(limits = c(-5,5),breaks=-5:5)+
+    scale_x_discrete(labels = c("q1","q2","q3","q4","q5","q6"))+
+xlab("")+
+  scale_shape_manual(guide=F,values=c(1,1))+
+  scale_color_manual(values=c("gray50","gray10"))+
+  facet_grid(cols = vars(ban.pesticide.lab))+
+  facet_wrap(~ban.pesticide.lab)+
+  # coord_flip()+
+  theme_tufte() +
+      labs(title = "Fig. 9: Treatment effect on decision credibility",
+              subtitle = "",
+              caption = "Note: Red dots and bars represent means and 90% CIs")+
+  theme(
+  plot.caption = element_text(hjust = 0)
+  )
+
+```
+<br>
+
 ```{r}
 tmod1 <- lm(credibility.pest.considerations ~ treatment,efsa_00_approve.pest)
 tmod2 <- lm(credibility.pest.considerations ~ treatment+independence.polit.efsa,efsa_00_approve.pest)
@@ -601,6 +663,7 @@ tab_model(tmod1,
           show.se= T,             
           show.ci = F,             
           collapse.se = T,
+          show.std=T,
           dv.labels = c(" ","Considerations"," ", " " ,"Expertise"," ","","Commitment",""),
           wrap.labels = 1,
           title = "Table 3: Treatment effect on credibility (approve pesticide case)")
@@ -608,6 +671,42 @@ tab_model(tmod1,
 ```
 
 <br>
+
+```{r}
+tmod1 <- lm(credibility.pest.q1 ~ treatment,efsa_00_approve.pest)
+tmod2 <- lm(credibility.pest.q1 ~ treatment+independence.polit.efsa,efsa_00_approve.pest)
+tmod3 <- lm(credibility.pest.q1 ~ treatment+independence.polit.efsa+independence.industry.efsa,efsa_00_approve.pest)
+
+tmod4 <- lm(credibility.pest.q2 ~ treatment,efsa_00_approve.pest)
+tmod5 <- lm(credibility.pest.q2 ~ treatment+independence.polit.efsa,efsa_00_approve.pest)
+tmod6 <- lm(credibility.pest.q2 ~ treatment+independence.polit.efsa+independence.industry.efsa,efsa_00_approve.pest)
+
+tmod7 <- lm(credibility.pest.q3 ~ treatment,efsa_00_approve.pest)
+tmod8 <- lm(credibility.pest.q3 ~ treatment+independence.polit.efsa,efsa_00_approve.pest)
+tmod9 <- lm(credibility.pest.q3 ~ treatment+independence.polit.efsa+independence.industry.efsa,efsa_00_approve.pest)
+
+
+
+tab_model(tmod1,
+          tmod2,
+          tmod3,
+          tmod4,
+          tmod5,
+          tmod6,
+          tmod7,
+          tmod8,
+          tmod9,
+          show.se= T,             
+          show.ci = F,             
+          collapse.se = T,
+          dv.labels = c(" ","Considerations"," ", " " ,"Expertise"," ","","Commitment",""),
+          wrap.labels = 1,
+          title = "Table 3: Treatment effect on credibility (approve pesticide case)")
+
+```
+
+<br>
+
 
 ## **Treatment effect and its moderation by prior beliefs**
 
@@ -767,6 +866,7 @@ inter.binning(Y = "credibility.pest.considerations", D = "treatment", X = "suppo
   )
 
 ```
+
 
 <br>
 
@@ -3470,7 +3570,14 @@ ggplot(aes(x=treatment.lab,y=credibility.efsa.post.commitment))+
 
 ```
 <br>
+```{r}
+sjstats::grpmean(efsa_00,
+                 credibility.efsa.post,
+                 treatment,
+                 out="v")
 
+cohen.d(efsa_00$credibility.efsa.post~efsa_00$treatment)
+```
 
 # Moderation of prior beliefs
 
@@ -3514,6 +3621,7 @@ t1 <- efsa_00 %>%
          credibility.efsa.pre,
          greediness.food.industry,
          ban.pesticide,
+         trust.eu.commission,
          organization.type.short) %>% as.data.frame()
 
 t1.ban <- t1 %>%
@@ -4172,7 +4280,354 @@ gather("independence.of","value",-treatment.lab,-credibility.echa.pre) %>%
 <br>
 
 
+# Independence vs. priors: 
+
 <br>
+```{r}
+tmod1.1 <- lm(credibility.pest.considerations~ 
+            ban.pesticide*(
+            supports.pesticides +
+            organization.type.short),
+            data=efsa_00) 
+tmod1.2 <- lm(credibility.pest.considerations~ 
+            ban.pesticide*(
+            supports.pesticides +
+            organization.type.short)+
+            independence.polit.efsa,
+            data=efsa_00) 
+
+tmod2.1 <- lm(credibility.pest.expertise~ 
+            ban.pesticide*(
+            supports.pesticides +
+            organization.type.short),
+            data=efsa_00) 
+tmod2.2 <- lm(credibility.pest.expertise~ 
+            ban.pesticide*(
+            supports.pesticides +
+            organization.type.short)+
+            independence.polit.efsa,
+            data=efsa_00) 
+
+tmod3.1 <- lm(credibility.pest.commitment~ 
+            ban.pesticide*(
+            supports.pesticides +
+            organization.type.short),
+            data=efsa_00) 
+tmod3.2 <- lm(credibility.pest.commitment~ 
+            ban.pesticide*(
+            supports.pesticides +
+            organization.type.short)+
+            independence.polit.efsa,
+            data=efsa_00) 
+
+tab_model(tmod1.1,
+          tmod1.2,
+          tmod2.1,
+          tmod2.2,
+          tmod3.1,
+          tmod3.2,
+          
+          show.se= T,             
+          show.ci = F,             
+          collapse.se = T,
+          show.std=T,
+          title = "decision credibility")
+```
+<br>
+
+## Supports pesticide
+
+<br>
+```{r}
+t1 <- efsa_00 %>% 
+  data.frame() %>% 
+  mutate(approve.pesticide = ban.pesticide %>% Recode("0=1;1=0"))
+
+inter.binning(Y = "credibility.pest.considerations", D = "approve.pesticide", X = "supports.pesticides", data = t1, nbins = 5,na.rm = TRUE, main = " ")$graph +
+  geom_hline(yintercept = 0, colour = "grey60", linetype = 2)+
+  theme_tufte()  +
+  labs(title = " ",
+              subtitle = "Considerations",
+              caption = "")+
+  theme(
+  plot.caption = element_text(hjust = 0)
+  )
+```
+<br>
+```{r}
+inter.binning(Y = "credibility.pest.expertise", D = "approve.pesticide", X = "supports.pesticides", data = t1, nbins = 5,na.rm = TRUE, main = " ")$graph +
+  geom_hline(yintercept = 0, colour = "grey60", linetype = 2)+
+  theme_tufte()  +
+  labs(title = " ",
+              subtitle = "Expertise",
+              caption = "")+
+  theme(
+  plot.caption = element_text(hjust = 0)
+  )
+```
+<br>
+```{r}
+inter.binning(Y = "credibility.pest.commitment", D = "approve.pesticide", X = "supports.pesticides", data = t1, nbins = 5,na.rm = TRUE, main = " ")$graph +
+  geom_hline(yintercept = 0, colour = "grey60", linetype = 2)+
+  theme_tufte()  +
+  labs(title = " ",
+              subtitle = "Commitment",
+              caption = "")+
+  theme(
+  plot.caption = element_text(hjust = 0)
+  )
+```
+<br>
+
+## Perceived greediness 
+
+<br>
+```{r}
+t1 <- efsa_00 %>% 
+  data.frame() %>% 
+  mutate(approve.pesticide = ban.pesticide %>% Recode("0=1;1=0"))
+
+inter.binning(Y = "credibility.pest.considerations", D = "approve.pesticide", X = "greediness.food.industry", data = t1, nbins = 5,na.rm = TRUE, main = " ")$graph +
+  geom_hline(yintercept = 0, colour = "grey60", linetype = 2)+
+  theme_tufte()  +
+  labs(title = " ",
+              subtitle = "Considerations",
+              caption = "")+
+  theme(
+  plot.caption = element_text(hjust = 0)
+  )
+```
+<br>
+```{r}
+inter.binning(Y = "credibility.pest.expertise", D = "approve.pesticide", X = "greediness.food.industry", data = t1, nbins = 5,na.rm = TRUE, main = " ")$graph +
+  geom_hline(yintercept = 0, colour = "grey60", linetype = 2)+
+  theme_tufte()  +
+  labs(title = " ",
+              subtitle = "Expertise",
+              caption = "")+
+  theme(
+  plot.caption = element_text(hjust = 0)
+  )
+```
+<br>
+```{r}
+inter.binning(Y = "credibility.pest.commitment", D = "approve.pesticide", X = "greediness.food.industry", data = t1, nbins = 5,na.rm = TRUE, main = " ")$graph +
+  geom_hline(yintercept = 0, colour = "grey60", linetype = 2)+
+  theme_tufte()  +
+  labs(title = " ",
+              subtitle = "Commitment",
+              caption = "")+
+  theme(
+  plot.caption = element_text(hjust = 0)
+  )
+```
+<br>
+
+# IV analysis
+
+<br>
+
+http://eclr.humanities.manchester.ac.uk/index.php/IV_in_R
+
+
+First stage regresseion: Perceived independence (endogenous) ~ treatment (exogenous)
+<br>
+```{r}
+library(AER)
+
+t1 <- efsa_00 %>% 
+data.frame() %>% 
+  drop_na(independence.polit.efsa)
+
+
+tmod1.1stage <- lm(independence.polit.efsa~ 
+            ban.pesticide*(
+            supports.pesticides +
+            organization.type.short)+
+            treatment,
+            data=t1)
+
+tab_model(tmod1.1stage,
+          show.se= T,             
+          show.ci = F,             
+          collapse.se = T,
+          show.std=T)
+
+
+```
+
+```{r}
+tmod2 <- update(tmod1.1stage, . ~ . - treatment)
+
+anova(tmod1.1stage,tmod2)
+```
+
+<br>
+
+2sls
+```{r}
+
+tmod1.dv <- lm(credibility.pest.considerations~
+                   independence.polit.efsa+ 
+            ban.pesticide*(
+            supports.pesticides +
+            organization.type.short),data=t1)
+
+reg_iv1 <- ivreg(credibility.pest.considerations~
+                   independence.polit.efsa+ 
+            ban.pesticide*(
+            supports.pesticides +
+            organization.type.short)|.-independence.polit.efsa+treatment,data=t1)
+summary(tmod1.dv)
+summary(reg_iv1)
+```
+
+<br>
+
+```{r}
+t1 <- t1 %>% 
+  mutate(independence.polit.efsa_hat = fitted.values(tmod1.1stage))
+
+
+tmod2.dv <- lm(credibility.pest.considerations~
+                   independence.polit.efsa_hat+ 
+            ban.pesticide*(
+            supports.pesticides +
+            organization.type.short),data=t1)
+
+
+summary(tmod2.dv)
+
+```
+<br>
+Hausman test for endogeneity
+
+```{r}
+    # Hausman
+Hausman_reg <- lm(credibility.pest.considerations~
+                   independence.polit.efsa_hat+ 
+            ban.pesticide*(
+            supports.pesticides +
+            organization.type.short)+
+              tmod1.1stage$residuals,data=t1)
+summary(Hausman_reg)
+
+tmod2 <- update(Hausman_reg, . ~ . - tmod1.1stage$residuals)
+
+anova(Hausman_reg,tmod2)
+```
+<br>
+Sargan test for instrument validity
+
+```{r}
+    Sargan_reg <- lm(reg_iv1$residuals~ban.pesticide*(
+            supports.pesticides +
+            organization.type.short),data=t1)
+    Sargan_reg_sm <- summary(Sargan_reg)
+
+```
+
+<br>
+
+```{r}
+tmod1.dv <- lm(credibility.pest.expertise~
+                   independence.polit.efsa+ 
+            ban.pesticide*(
+            supports.pesticides +
+            organization.type.short),data=t1)
+
+reg_iv1 <- ivreg(credibility.pest.expertise~
+                   independence.polit.efsa+ 
+            ban.pesticide*(
+            supports.pesticides +
+            organization.type.short)|.-independence.polit.efsa+treatment,data=t1)
+summary(tmod1.dv)
+summary(reg_iv1)
+
+```
+
+<br>
+
+```{r}
+tmod1.dv <- lm(credibility.pest.commitment~
+                   independence.polit.efsa+ 
+            ban.pesticide*(
+            supports.pesticides +
+            organization.type.short),data=t1)
+
+reg_iv1 <- ivreg(credibility.pest.commitment~
+                   independence.polit.efsa+ 
+            ban.pesticide*(
+            supports.pesticides +
+            organization.type.short)|.-independence.polit.efsa+treatment,data=t1)
+summary(tmod1.dv)
+summary(reg_iv1)
+
+```
+
+# Table
+
+```{r}
+library(stargazer)
+
+tmod1.1stage <- lm(independence.polit.efsa~ 
+            treatment+
+              ban.pesticide*(
+            supports.pesticides +
+            organization.type.short),
+            data=t1)
+
+tmod1.1 <- lm(credibility.pest.considerations~ 
+            ban.pesticide*(
+            supports.pesticides +
+            organization.type.short),
+            data=t1) 
+tmod1.2 <-  update(tmod1.1, . ~ independence.polit.efsa + .)
+reg_iv1 <- ivreg(credibility.pest.considerations~
+                   independence.polit.efsa+ 
+            ban.pesticide*(
+            supports.pesticides +
+            organization.type.short)|.-independence.polit.efsa+treatment,data=t1)
+
+
+tmod2.1 <- update(tmod1.1, credibility.pest.expertise ~ . ) 
+tmod2.2 <- update(tmod1.2, credibility.pest.expertise ~ . )
+reg_iv2 <- update(reg_iv1, credibility.pest.expertise ~ . )
+
+
+tmod3.1 <- update(tmod1.1, credibility.pest.commitment ~ . ) 
+tmod3.2 <- update(tmod1.2, credibility.pest.commitment ~ . ) 
+reg_iv3 <- update(reg_iv1, credibility.pest.commitment ~ . )
+
+stargazer(tmod1.1stage,
+          tmod1.1,tmod1.2,reg_iv1,
+          tmod2.1,tmod2.2,reg_iv2,
+          tmod3.1,tmod3.2,reg_iv3,
+          type="html",
+          style = "apsr",
+          omit.stat = c("rsq","ser", "f"),
+          dep.var.labels=c("Perceived independence    (1st stage)",
+                           "Considerations",
+                           "Expertise",
+                           "Commitment"),
+          covariate.labels=c(
+            "Independence treatment",
+            "Perceived independece",
+            "Ban pesticide (0=approve)",
+            "Support for pesticides",
+            "Industry",
+            "NGO",
+            "Support for pesticides * Ban pesticide",
+            "Industry * Ban pesticide",
+            "NGO * Ban pesticide"),
+          initial.zero = FALSE,
+          out="x.htm")
+
+
+```
+
+
+
 
 # END
 
