@@ -54,6 +54,8 @@ library(interflex)
 library(effsize)
 library(broom)
 library(sjstats)
+library(stargazer)
+library(AER)
 ```
 
 # Data preperations
@@ -123,6 +125,13 @@ efsa_00_ban.pest <- efsa_00 %>%
 efsa_00_approve.pest <- efsa_00 %>% 
   filter(ban.pesticide==0)
 
+#subsets for treatment
+
+efsa_00_treatment <- efsa_00 %>% 
+  filter(treatment==1)
+
+efsa_00_control <- efsa_00 %>% 
+  filter(treatment==0)
 
 ```
 <br>
@@ -4340,10 +4349,11 @@ tab_model(tmod1.1,
 <br>
 ```{r}
 t1 <- efsa_00 %>% 
+  drop_na(independence.polit.efsa) %>% 
   data.frame() %>% 
   mutate(approve.pesticide = ban.pesticide %>% Recode("0=1;1=0"))
 
-inter.binning(Y = "credibility.pest.considerations", D = "approve.pesticide", X = "supports.pesticides", data = t1, nbins = 5,na.rm = TRUE, main = " ")$graph +
+inter.binning(Y = "credibility.pest.considerations", D = "ban.pesticide", X = "supports.pesticides", Z = c("independence.polit.efsa"), data = t1, nbins = 5,na.rm = TRUE, main = " ")$graph +
   geom_hline(yintercept = 0, colour = "grey60", linetype = 2)+
   theme_tufte()  +
   labs(title = " ",
@@ -4355,7 +4365,7 @@ inter.binning(Y = "credibility.pest.considerations", D = "approve.pesticide", X 
 ```
 <br>
 ```{r}
-inter.binning(Y = "credibility.pest.expertise", D = "approve.pesticide", X = "supports.pesticides", data = t1, nbins = 5,na.rm = TRUE, main = " ")$graph +
+inter.binning(Y = "credibility.pest.expertise", D = "ban.pesticide", X = "supports.pesticides", Z = "independence.polit.efsa", data = t1, nbins = 5,na.rm = TRUE, main = " ")$graph +
   geom_hline(yintercept = 0, colour = "grey60", linetype = 2)+
   theme_tufte()  +
   labs(title = " ",
@@ -4364,10 +4374,11 @@ inter.binning(Y = "credibility.pest.expertise", D = "approve.pesticide", X = "su
   theme(
   plot.caption = element_text(hjust = 0)
   )
+
 ```
 <br>
 ```{r}
-inter.binning(Y = "credibility.pest.commitment", D = "approve.pesticide", X = "supports.pesticides", data = t1, nbins = 5,na.rm = TRUE, main = " ")$graph +
+inter.binning(Y = "credibility.pest.commitment", D = "ban.pesticide", X = "supports.pesticides", data = t1, nbins = 5,na.rm = TRUE, main = " ")$graph +
   geom_hline(yintercept = 0, colour = "grey60", linetype = 2)+
   theme_tufte()  +
   labs(title = " ",
@@ -4433,7 +4444,7 @@ http://eclr.humanities.manchester.ac.uk/index.php/IV_in_R
 First stage regresseion: Perceived independence (endogenous) ~ treatment (exogenous)
 <br>
 ```{r}
-library(AER)
+
 
 t1 <- efsa_00 %>% 
 data.frame() %>% 
@@ -4565,10 +4576,91 @@ summary(reg_iv1)
 
 ```
 
-# Table
+# Tables
+
+<br>
+
+## Regressions
+
+<br>
 
 ```{r}
-library(stargazer)
+
+tmod1.0.0 <- lm(credibility.pest.considerations~ 
+            ban.pesticide,
+            data=t1) 
+
+tmod1.0.1 <- lm(credibility.pest.considerations~ 
+            ban.pesticide +
+            supports.pesticides +
+            organization.type.short,
+            data=t1) 
+
+tmod1.1 <- lm(credibility.pest.considerations~ 
+            ban.pesticide*(
+            supports.pesticides +
+            organization.type.short),
+            data=t1) 
+
+tmod1.2 <-  update(tmod1.1, . ~ independence.polit.efsa + .)
+
+
+tmod2.0.0 <- lm(credibility.pest.expertise~ 
+            ban.pesticide,
+            data=t1) 
+
+tmod2.0.1 <- lm(credibility.pest.expertise~ 
+            ban.pesticide +
+            supports.pesticides +
+            organization.type.short,
+            data=t1) 
+
+tmod2.1 <- update(tmod1.1, credibility.pest.expertise ~ . ) 
+tmod2.2 <- update(tmod1.2, credibility.pest.expertise ~ . )
+
+
+
+tmod3.0.0 <- lm(credibility.pest.commitment~ 
+            ban.pesticide,
+            data=t1) 
+
+tmod3.0.1 <- lm(credibility.pest.commitment~ 
+            ban.pesticide +
+            supports.pesticides +
+            organization.type.short,
+            data=t1) 
+
+tmod3.1 <- update(tmod1.1, credibility.pest.commitment ~ . ) 
+tmod3.2 <- update(tmod1.2, credibility.pest.commitment ~ . ) 
+
+stargazer(tmod1.0.0,tmod1.0.1,tmod1.1,tmod1.2,
+          tmod2.0.0,tmod2.0.1,tmod2.1,tmod2.2,
+          tmod3.0.0,tmod3.0.1,tmod3.1,tmod3.2,
+          type="html",
+          covariate.labels=c(
+            "Perceived independece",
+            "Ban pesticide (0=approve)",
+            "Supports pesticides",
+            "Industry",
+            "NGO",
+            "Supports pesticides x Ban pesticide",
+            "Industry x Ban pesticide",
+            "NGO x Ban pesticide"),
+          style = "apsr",
+          omit.stat = c("rsq","ser", "f"),
+          dep.var.labels=c("Considerations",
+                           "Expertise",
+                           "Commitment"),
+          initial.zero = FALSE,
+          out="x1.htm")
+
+
+
+anova(tmod3.0.0,tmod3.1)
+```
+<br>
+```{r}
+
 
 tmod1.1stage <- lm(independence.polit.efsa~ 
             treatment+
@@ -4577,12 +4669,6 @@ tmod1.1stage <- lm(independence.polit.efsa~
             organization.type.short),
             data=t1)
 
-tmod1.1 <- lm(credibility.pest.considerations~ 
-            ban.pesticide*(
-            supports.pesticides +
-            organization.type.short),
-            data=t1) 
-tmod1.2 <-  update(tmod1.1, . ~ independence.polit.efsa + .)
 reg_iv1 <- ivreg(credibility.pest.considerations~
                    independence.polit.efsa+ 
             ban.pesticide*(
@@ -4590,19 +4676,15 @@ reg_iv1 <- ivreg(credibility.pest.considerations~
             organization.type.short)|.-independence.polit.efsa+treatment,data=t1)
 
 
-tmod2.1 <- update(tmod1.1, credibility.pest.expertise ~ . ) 
-tmod2.2 <- update(tmod1.2, credibility.pest.expertise ~ . )
 reg_iv2 <- update(reg_iv1, credibility.pest.expertise ~ . )
 
 
-tmod3.1 <- update(tmod1.1, credibility.pest.commitment ~ . ) 
-tmod3.2 <- update(tmod1.2, credibility.pest.commitment ~ . ) 
 reg_iv3 <- update(reg_iv1, credibility.pest.commitment ~ . )
 
 stargazer(tmod1.1stage,
-          tmod1.1,tmod1.2,reg_iv1,
-          tmod2.1,tmod2.2,reg_iv2,
-          tmod3.1,tmod3.2,reg_iv3,
+          tmod1.2,reg_iv1,
+          tmod2.2,reg_iv2,
+          tmod3.2,reg_iv3,
           type="html",
           style = "apsr",
           omit.stat = c("rsq","ser", "f"),
@@ -4611,22 +4693,169 @@ stargazer(tmod1.1stage,
                            "Expertise",
                            "Commitment"),
           covariate.labels=c(
-            "Independence treatment",
+            "Treatment",
             "Perceived independece",
             "Ban pesticide (0=approve)",
-            "Support for pesticides",
+            "Supports pesticides",
             "Industry",
             "NGO",
-            "Support for pesticides * Ban pesticide",
-            "Industry * Ban pesticide",
-            "NGO * Ban pesticide"),
+            "Supports pesticides x Ban pesticide",
+            "Industry x Ban pesticide",
+            "NGO x Ban pesticide"),
           initial.zero = FALSE,
-          out="x.htm")
+          out="x2.htm")
 
 
 ```
 
+<br>
 
+## IV estimation
+
+<br>
+
+```{r}
+t1 <- efsa_00 %>%
+  drop_na(independence.polit.efsa) %>% 
+  group_by(treatment) %>% 
+  summarise(N = n(),
+    mean_independence.polit.efsa = (mean(independence.polit.efsa,na.rm = T)) %>% round(2),
+    se_independence.polit.efsa = (sd(independence.polit.efsa,na.rm = T)/sqrt(n())) %>% round(2),
+    
+    mean_credibility.pest.considerations = (mean(credibility.pest.considerations,na.rm = T)) %>% round(2),
+    se_credibility.pest.considerations = (sd(credibility.pest.considerations,na.rm = T)/sqrt(n())) %>% round(2),
+    
+    mean_credibility.pest.expertise = (mean(credibility.pest.expertise,na.rm = T)) %>% round(2),
+    se_credibility.pest.expertise = (sd(credibility.pest.expertise,na.rm = T)/sqrt(n())) %>% round(2),
+    
+    mean_credibility.pest.commitment = (mean(credibility.pest.commitment,na.rm = T)) %>% round(2),
+    se_credibility.pest.commitment = (sd(credibility.pest.commitment,na.rm = T)/sqrt(n())) %>% round(2))
+
+
+iv.table.t <- data.frame(
+  x1 = c("First stage (FS)",
+         "Reduced form (RF)",
+          "IV estimate ((RF) / (FS))",
+          rep(c("Reduced form",
+          "IV estimate"),2),
+          "N"),
+  Variable = c("Perceived independence",
+          "Credibility - considerations","",
+          "Credibility - expertise","",
+          "Credibility - commitment","","")
+  ) %>% 
+
+  mutate(treat.mean = c(filter(t1,treatment==1)$mean_independence.polit.efsa,
+                        filter(t1,treatment==1)$mean_credibility.pest.considerations,
+                        "",
+                        filter(t1,treatment==1)$mean_credibility.pest.expertise,
+                        "",
+                        filter(t1,treatment==1)$mean_credibility.pest.commitment,
+                        "",
+                        "") %>% as.numeric(),
+         treat.se = c(filter(t1,treatment==1)$se_independence.polit.efsa,
+                        filter(t1,treatment==1)$se_credibility.pest.considerations,
+                        "",
+                        filter(t1,treatment==1)$se_credibility.pest.expertise,
+                        "",
+                        filter(t1,treatment==1)$se_credibility.pest.commitment,
+                        "",
+                        "")%>% as.numeric(),
+         control.mean = c(filter(t1,treatment==0)$mean_independence.polit.efsa,
+                        filter(t1,treatment==0)$mean_credibility.pest.considerations,
+                        "",
+                        filter(t1,treatment==0)$mean_credibility.pest.expertise,
+                        "",
+                        filter(t1,treatment==0)$mean_credibility.pest.commitment,
+                        "",
+                        "")%>% as.numeric(),
+         control.se = c(filter(t1,treatment==0)$se_independence.polit.efsa,
+                        filter(t1,treatment==0)$se_credibility.pest.considerations,
+                        "",
+                        filter(t1,treatment==0)$se_credibility.pest.expertise,
+                        "",
+                        filter(t1,treatment==0)$se_credibility.pest.commitment,
+                        "",
+                        "")%>% as.numeric()) %>% 
+        
+  mutate(
+Control = 
+           c(
+             
+str_c(
+  control.mean,
+  " (",
+  control.se,
+  ")"
+  )),
+
+Treatment = 
+           c(
+             
+str_c(
+  treat.mean,
+  " (",
+  treat.se,
+  ")"
+  )),
+
+diff = treat.mean-control.mean)
+
+
+t_independence.polit.efsa <- t.test(independence.polit.efsa~treatment,efsa_00 %>% drop_na(independence.polit.efsa))[["statistic"]][["t"]] %>% abs() %>% round(3)
+
+t_credibility.pest.considerations <- t.test(credibility.pest.considerations~treatment,efsa_00 %>% drop_na(independence.polit.efsa))[["statistic"]][["t"]] %>% abs() %>% round(3)
+
+t_credibility.pest.expertise <- t.test(credibility.pest.expertise~treatment,efsa_00 %>% drop_na(independence.polit.efsa))[["statistic"]][["t"]] %>% abs() %>% round(3)
+
+t_credibility.pest.commitment <- t.test(credibility.pest.commitment~treatment,efsa_00 %>% drop_na(independence.polit.efsa))[["statistic"]][["t"]] %>% abs() %>% round(3)
+
+t2 <- c(t_independence.polit.efsa,
+        t_credibility.pest.considerations,NA,
+        t_credibility.pest.expertise,NA,
+        t_credibility.pest.commitment,NA,NA)
+
+iv.table.t <- iv.table.t %>% 
+mutate(t=t2,
+       se.diff = (diff/t2) %>% round(2)) %>% 
+  mutate(Difference = str_c(diff,
+                            " (",
+                            se.diff,
+                            ")")) %>%  
+
+
+
+#fs.diff =  iv.table.t$diff[1]
+
+mutate(iv.estimate = (diff/iv.table.t$diff[1]) %>% round(2))
+
+iv.table <- iv.table.t %>% 
+select(x1,
+       Variable,
+       Treatment,
+       Control,
+       Difference,
+       t)
+
+iv.table$Difference[c(3,5,7)] = iv.table.t$iv.estimate[c(2,4,6)]
+
+
+iv.table[is.na(iv.table)] <- ""
+
+iv.table[8,3] = efsa_00 %>% drop_na(independence.polit.efsa) %>% filter(treatment==1) %>% nrow()
+iv.table[8,4] = efsa_00 %>% drop_na(independence.polit.efsa) %>% filter(treatment==0) %>% nrow()
+iv.table[8,5] = efsa_00 %>% drop_na(independence.polit.efsa) %>% nrow()
+
+
+iv.table %>% 
+  kable(caption = "Table X: Instrumental Variable Estimation",
+        col.names = c("","","Treatment","Control","Difference","t")) %>%
+  add_header_above(c(" " = 2, "Independence" = 2, " " = 2)) %>%
+  kable_styling(full_width = F) %>% 
+  footnote(general = "Standard errors in parentheses")
+```
+
+<br>
 
 
 # END
