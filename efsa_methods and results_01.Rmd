@@ -92,8 +92,13 @@ efsa_00 <- efsa_00 %>%
   mutate(credibility.pest.index.01 = (credibility.pest.commitment+
                                      credibility.pest.considerations+
                                      credibility.pest.expertise)/3)
-  
 
+#reptutation  
+efsa_00 <- efsa_00 %>% 
+  mutate(reputation.efsa.technical = (reputation.efsa.q1+reputation.efsa.q2+reputation.efsa.q3+reputation.efsa.q4+reputation.efsa.q5)/5,
+         reputation.efsa.performative = (reputation.efsa.q6+reputation.efsa.q7)/2,
+         reputation.efsa.moral = (reputation.efsa.q8+reputation.efsa.q9)/2,
+         reputation.efsa.procedural = (reputation.efsa.q10+reputation.efsa.q11)/2)
 
 #filtering 
 
@@ -167,8 +172,8 @@ In the following section we provide background on the empirical case. Thereafter
 ## *Data collection*
 
 ```{r, echo=FALSE, warning=FALSE, message=F}
-n.invitations = 675
-n.errors = 45
+n.invitations = 654
+n.errors = 46
 n.invitations_effective = n.invitations-n.errors
 
 n.start = efsa_00 %>% nrow()
@@ -179,7 +184,7 @@ n.reach_end = efsa_raw %>% filter(Q13.13 !=0)%>% nrow()
 
 We constructed a list of names, organizational affiliation and contact details of potential stakeholders of EFSA, based on three data sources. First, we relied on the *EU Transparency Register* (http://ec.europa.eu/transparencyregister), which includes information on more than 10,000 organisations representing particular interests at EU level (Joint Transparency Register Secretariat, 2019). The register's information is updated annually by the organizations themselves, and includes details of their "person with legal responsibility" and "person in charge of EU relations". To restrict the list to potential stakeholders of EFSA, we filtered the dataset based on organizations' self-reporting of their goals, activities and fields on interest. This search yielded a list of 3,155 persons from 2,045 different organizations related to the domains of food and agriculture. It included representatives of the industry, NGOs and advocacy groups, professional organizations engaging in research, low firms and consultancy groups. We then supplemented the latter with two additional sources, obtained from EFSA's website: official documents of EFSA's meetings with stakeholders and the lists of the agency's "registered stakeholders". The two latter sources included 392 persons from 259 organizations. Further details about the construction the two lists are available in the supplementary appendix [TBA].         
 
-Thereafter, we searched the internet for email addresses of these stakeholders. For the first list, retrieved from the transparency register, we conducted an automatic search. We web-scraped their organizations' official websites, and matched the found email patterns with participants' names and initials.[^footnote_email.scraping] Using this method, which enabled us to avoid time-consuming manual search, we managed to find email addresses of 437 stakeholders (`r ((437/3155)*100) %>% round(0)`% of total names in the list). For the second list, which includes stakeholders that participated in EFSA meetings and consultations, we conducted both automatic and manual online search, through which we managed to find addresses of 229 persons (`r ((229/392)*100) %>% round(0)`%). 
+Thereafter, we searched the internet for email addresses of these stakeholders. For the first list, retrieved from the transparency register, we conducted an automatic search. We web-scraped their organizations' official websites, and matched the found email patterns with participants' names and initials.[^footnote_email.scraping] Using this method, which enabled us to avoid time-consuming manual search, we managed to find email addresses of 425 stakeholders (`r ((425/3155)*100) %>% round(0)`% of total names in the list). For the second list, which includes stakeholders that participated in EFSA meetings and consultations, we conducted both automatic and manual online search, through which we managed to find addresses of 229 persons (`r ((229/392)*100) %>% round(0)`%). 
 
 [^footnote_email.scraping]: Our r code is available at: https://github.com/saaralonbarkat/stakeholders.emails. 
 
@@ -213,7 +218,7 @@ Towrards the end of the survey, we asked them a set of demographic questions and
 
 <br>
 
-##*Variables*
+## *Variables*
 
 ```{r, echo=FALSE, warning=FALSE, message=F}
 alpha_considerations = psych::alpha(select(efsa_00, credibility.pest.q2,
@@ -224,9 +229,9 @@ credibility.pest.q5))[["total"]][["raw_alpha"]]%>%round(2)
 
 ```
 
-The ouctome variable, the perceived credibility of the decision, is measured in the survey using six Likert scale items, ranging between -5 (strongly disagree) and +5 (strongly agree). The items aim to capture the three aspects of policy credibility. To reiterate, the first aspect regards the extent to which the decision is based on relevant considerations. This is aspect is measured through three items: I believe that the opinion was based strictly on scientific considerations; I believe that the opinion was influenced by political interests (reversed); I believe that the opinion was affected by the industry interests (reversed) (Cronbach’s alpha = `r alpha_considerations`). The second aspect regards the extent to which the decision is based on an adequate, professional procedures. Is measured through two items: I believe that the opinion was formed after evaluating all the relevant data and evidence; I believe that the assessment of the evidence was based on adequate methods (Cronbach’s alpha = `r alpha_expertise`). Finally, the third aspect regards the time-consistency of the decision, or the extent to which it is perceived as a credible commitment. The latter is measured through the following signle item: I believe that EFSA's opinion about the pesticide may change the next time it will be asked to reexamine it. (reversed). Respondents were presented with the six questions in a random order. [## TBA assessing fitness of the three components via CFA ##]. 
+Our ouctome variable, the perceived credibility of the decision, is measured in the survey using six Likert scale items, ranging between -5 (strongly disagree) and +5 (strongly agree). These items aim to capture the three aspects of policy credibility. To reiterate, the first aspect regards the extent to which the decision is strictly based on relevant considerations. This is aspect is measured through three items: I believe that the opinion was based strictly on scientific considerations; I believe that the opinion was influenced by political interests (reversed); I believe that the opinion was affected by the industry interests (reversed) (Cronbach’s alpha = `r alpha_considerations`). The second aspect regards the extent to which the decision is based on adequate, professional procedures, and reflect expertiese. Is measured through two items: I believe that the opinion was formed after evaluating all the relevant data and evidence; I believe that the assessment of the evidence was based on adequate methods (Cronbach’s alpha = `r alpha_expertise`). Finally, the third aspect regards the time-consistency of the decision, or the extent to which it is perceived as a credible commitment. The latter is measured through the following signle item: I believe that EFSA's opinion about the pesticide may change the next time it will be asked to reexamine it (reversed). The six items were presented in a random order, to rule out an assimilation effect. [## TBA assessing fitness of the three components via CFA ##]. 
 
-`r figure.x=figure.x+1`**Figure.x `r figure.x`** graphically presents the distribution of the three credibility components with regard to the two decisions. 
+`r figure.x=figure.x+1`**Figure.x `r figure.x`** graphically presents the means and distribution of the three credibility components with regard to the two decisions. Overall, participants tend to perceive both decisions as relatively credible, with the exception that the approve-pesticide decision is not peceived as a credible commitment (*Mean* = `r efsa_00_approve.pest%>% summarise(mean(credibility.pest.commitment,na.rm=T))%>%max()%>%round(2)` on a scale of -5 to 5, only `r ((efsa_00_approve.pest %>% filter(credibility.pest.commitment>0) %>% nrow())/(efsa_00_approve.pest %>% drop_na(credibility.pest.commitment) %>% nrow())*100) %>% round(0)`% of the answers were above 0`). Respondents tend to perceive the ban-pesticide decision as more credible, on average. The three measures are correlated with each other, and are also positively associated with the general items on EFSA's credibility and reputation. It should be noted, however, that the correlation of the latter with the commitment item is weaker. The three credibility measures are also associated with greater trust in the EU institutions, and perceived familiarity with the agency.            
 
 ```{r, echo=FALSE, warning=FALSE, message=F}
 efsa_00 %>% 
@@ -238,7 +243,7 @@ efsa_00 %>%
 
 ggplot(aes(x=key,y=value,color=ban.pesticide.lab,shape=ban.pesticide.lab))+
   geom_boxplot(width = 0.5)+
-      stat_summary(fun.data = mean_cl_normal, geom = "errorbar", fun.args=list(conf.int=0.90), colour = "red",alpha=0.5,width=0.1,size=1,position=position_dodge(0.5)) + 
+      stat_summary(fun.data = mean_cl_normal, geom = "errorbar", fun.args=list(conf.int=0.95), colour = "red",alpha=0.5,width=0.1,size=1,position=position_dodge(0.5)) + 
   stat_summary(fun.y = mean, geom = "point", colour = "red",alpha=0.5,size=2,position=position_dodge(0.5))+
   scale_y_continuous(limits = c(-5,5),breaks=-5:5)+
   scale_shape_manual(name = "Case/decision", values=c(1,1),labels = c("Approve pesticide (Flup.)","Ban pesticide (amitrole)"))+
@@ -248,19 +253,35 @@ ggplot(aes(x=key,y=value,color=ban.pesticide.lab,shape=ban.pesticide.lab))+
   theme_tufte()+
     labs(title = "Fig. 5: Decision credibility by case",
               subtitle = "",
-              caption = "Note: Red dots and bars represent means and 90% CIs")+
+              caption = "Note: Red dots and bars represent means and 95% CIs")+
   theme(
   plot.caption = element_text(hjust = 0)
   )
 ```
 
-Taken aggregately, participants tended to perceive  reported, on average, lower credibility in relation to the approve decisions trust in the air-pollution policy (*Mean* = `r SVIVA2_01_comb%>%summarise(mean(TRUST_air_INDEX,na.rm=T))%>%max() %>% round(2)`, *SD* = `r SVIVA2_01_comb%>%summarise(sd(TRUST_air_INDEX,na.rm=T))%>%max() %>% round(2)`) compared with the recycling policy (*Mean* = `r SVIVA2_01_comb%>%summarise(mean(TRUST_waste_INDEX,na.rm=T))%>%max() %>% round(2)`, *SD* = `r SVIVA2_01_comb%>%summarise(sd(TRUST_waste_INDEX,na.rm=T))%>%max() %>% round(2)`).
+Our first explanatory variable is the perceived independence of EFSA. After answering the six credibility questions, participants are asked to state their agreement with the following sentence (again, on a scale of -5 to 5): "EFSA’s opinions can be influenced by EU political institutions (European Commission, Council, Parliament)". For the analyses, we reversed this item, so that high values indicate high independence  (*Mean* = `r efsa_00.t1%>%summarise(mean(independence.polit.efsa))%>%max()%>%round(2)`, *SD* = `r efsa_00.t1%>%summarise(sd(independence.polit.efsa))%>%max()%>%round(2)`, *Median* = `r efsa_00.t1%>%summarise(median(independence.polit.efsa))%>%max()%>%round(2)`). Nevertheless, estimating the observational correlation between the perceived independence of EFSA its credibility still does not enable to effectively depict causal relations between the two variables, due to the concern of endogeneity. We addressed this limitation in this study by including the abovementioned manipulation for EFSA's independence. This enables us to supplement our observational analyses with a more rigorous experimental test. We regard the random assignment to control and treatment conditions as an instrumental variable. In other words, we estimate the extent to which decision credibility is alterred due the change in perceived independence that is caused by the manipulation (Hvidman, 2019). Applying an instumental variable analysis requires three assumptions: First, the instrumental variable (i.e. the independence treatment) is associated to the endogenous explanatory variable (i.e. perceived independence of EFSA). Indeed, our independence manipulation has a positive and significant effect on the perceived independence of EFSA (*Diff* = `r (mean(efsa_00_treatment$independence.polit.efsa,na.rm = T)-mean(efsa_00_control$independence.polit.efsa,na.rm = T)) %>% round(2)` [`r t.test(independence.polit.efsa~treatment,efsa_00)[["conf.int"]][1] %>% round(2)`,`r t.test(independence.polit.efsa~treatment,efsa_00)[["conf.int"]][2] %>% round(2)`], *t* = `r max(t.test(independence.polit.efsa~treatment,efsa_00)[["statistic"]]) %>% abs() %>% round(2)`, *p*<.01).[^footnote_iv.first.stage] Second, the instrument is exogenous, and uncorrelated with the error term of the outcome variable in the model. That assumption is ensured by the random assignment. Third, the instrument is assumed, theoretically, to affect the outcome varible only through its effect on the treatment. Since the treatment condition emphasized the independence of EFSA from political stakeholers, we are capable of making that assumption.               
 
+[^footnote_iv.first.stage]: It should be noted that this correlation is slightly weaker than the recomended standard (*F*>10, or *t*>3.16). This entails that the instumental variable estiamte is likely to be less accurate. Still... [TBA] 
+
+Our second explanatory variable is stakeholders' prior beliefs/positions regarding the issue at stake. We relied on two distinct measures to acount for stakeholders' prior positions regarding the risk of pesticides, and its regulation. First, we relied on the distinction participants working in NGOs, and those who work in industry. Second, we further asked participatnts directly about their perceptions about pesticides.   
 
 
 ```{r, echo=FALSE, warning=FALSE, message=F}
+tmod1.1stage %>% summary()
 
+lm(independence.polit.efsa~ 
+            treatment,
+            data=efsa_00.t1) %>% summary()
+
+
+tmod0 <- lm(independence.polit.efsa~ 
+            1,
+            data=efsa_00.t1)
+
+
+anova(tmodt1,tmod0)
 ```
+
 
 
 <br>
@@ -669,6 +690,8 @@ stargazer(tmod1.1stage,
           notes = "*Notes*: Table entries are non-standardized OLS and 2SLS regression coefficients, with Standard errors in parentheses. The reference category for the organizations is 'other'",
           notes.append = FALSE,
           title = "Table X: Table X: Decision credibility. 2SLS and OLS")
+
+summary(tmod1.1stage)
 
 ```
 &ast;*p*<.1; &ast;&ast;*p*<.05; &ast;&ast;&ast;*p*<.01 (two-tailed).          
