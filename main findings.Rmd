@@ -208,6 +208,12 @@ tmod3.0.1 <- update(tmod1.0.1, credibility.pest.commitment ~ . )
 tmod3.0.2 <- update(tmod1.0.2, credibility.pest.commitment ~ . )
 tmod3.0.3 <- update(tmod1.0.3, credibility.pest.commitment ~ . )
 
+tmod1.0.0 <-tmod1.0.0  
+tmod1.0.1 <- tmod1.0.1
+tmod1.0.2 <- tmod1.0.2
+tmod1.0.3 <- tmod1.0.3
+
+
 
 
 stargazer(tmod1.0.0,tmod1.0.1,tmod1.0.2,tmod1.0.3,
@@ -548,6 +554,7 @@ stargazer(tmod1.1stage,
 
 
 <br>
+
 
 
 
