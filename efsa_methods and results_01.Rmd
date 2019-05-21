@@ -1,6 +1,6 @@
 ---
 title: "The persuasion of symbolic elements in government public communications, and their moderation by personal relevance"
-author: '**Saar Alon-Barkat**, **Madalina Busuioc**'
+author: '**Saar Alon-Barkat**, **Madalina Busuioc** [alphabetical order]'
 date: " "
 output:
   html_document:
@@ -17,6 +17,7 @@ link-citations: yes
 #bibliography: phd_paper_2.bib
 csl: apa.csl
 urlcolor: blue
+always_allow_html: yes
 ---
 
 <br>
@@ -85,7 +86,7 @@ We empirically examine these hypotheses in relation the European Food Safety Aut
 
 [^footnote_preregister]: The pre-registration form is available at request. The pre-registration form also includes an additional hypothesis regarding the interaction between the independence treatment and participants' prior positions. However, due to lack of power, we were unable to effectively assess that interaction.      
 
-While experiments have been widely used by Public Administration scholars in recent years to explore the perceptions of citizens and political representatives about public agencies (e.g. ###), to the best of our knowledge, this is the first study to experimentally examine the factors that shape the perceptions of stakeholders and interest groups members regarding agencies' decisions. In addition, this is the first study to manipulate agencies perceived independence from political stakeholders.
+While experiments have been widely used by Public Administration scholars in recent years to explore the perceptions of citizens and political representatives about public agencies (Baekgaard et al., 2015; Grimmelikhuijsen et al., 2016; Jilke, Van de Walle, & Kim, 2016; for a systematic review of experimental studies in public administration see: Li & Van Ryzin, 2017), to the best of our knowledge, this is the first study to experimentally examine the factors that shape the perceptions of stakeholders and interest groups members regarding agencies' decisions. In addition, this is the first study to manipulate agencies perceived independence from political stakeholders.
 
 In the following section we provide background on the empirical case. Thereafter, we describe the population of survey respondents and their selection and recruitment, the course of the survey and experimental procedures and the operationalization of our main variables.   
 
@@ -110,15 +111,15 @@ n.reach_end = efsa_raw %>% filter(Q13.13 !=0)%>% nrow()
 
 ```
 
-We constructed a list of names, organizational affiliation and contact details of potential stakeholders of EFSA, based on three data sources. First, we relied on the *EU Transparency Register* (http://ec.europa.eu/transparencyregister), which includes information on more than 10,000 organisations representing particular interests at EU level (Joint Transparency Register Secretariat, 2019). The register's information is updated annually by the organizations themselves, and includes details of their "person with legal responsibility" and "person in charge of EU relations". To restrict the list to potential stakeholders of EFSA, we filtered the dataset based on organizations' self-reporting of their goals, activities and fields on interest. This search yielded a list of 3,155 persons from 2,045 different organizations related to the domains of food and agriculture. It included representatives of the industry, NGOs and advocacy groups, professional organizations engaging in research, low firms and consultancy groups. We then supplemented the latter with two additional sources, obtained from EFSA's website: official documents of EFSA's meetings with stakeholders and the lists of the agency's "registered stakeholders". The two latter sources included 392 persons from 259 organizations. Further details about the construction the two lists are available in the supplementary appendix [TBA].         
+We constructed a list of names, organizational affiliation and contact details of potential stakeholders of EFSA, based on a number of sources. First, we relied on the *EU Transparency Register* (http://ec.europa.eu/transparencyregister), which includes information on more than 10,000 organisations representing particular interests at EU level (Joint Transparency Register Secretariat, 2019). The register's information is updated annually by the organizations themselves, and includes details of their "person with legal responsibility" and "person in charge of EU relations". To restrict the list to potential stakeholders of EFSA, we filtered the dataset based on organizations' self-reporting of their goals, activities and fields on interest. This search yielded a list of 3,155 persons from 2,045 different organizations related to the domains of food and agriculture, including representatives of the industry, NGOs and advocacy groups, professional organizations engaging in research, low firms and consultancy groups. We then supplemented the latter with official documents of EFSA's meetings with stakeholders and the lists of the agency's "registered stakeholders". The latter sources, which were obtained from EFSA's website, included 392 persons from 259 organizations. Further details about the construction the two lists are available in the supplementary appendix [TBA].         
 
-Thereafter, we searched the internet for email addresses of these stakeholders. For the first list, retrieved from the transparency register, we conducted an automatic search. We web-scraped their organizations' official websites, and matched the found email patterns with participants' names and initials.[^footnote_email.scraping] Using this method, which enabled us to avoid time-consuming manual search, we managed to find email addresses of 425 stakeholders (`r ((425/3155)*100) %>% round(0)`% of total names in the list). For the second list, which includes stakeholders that participated in EFSA meetings and consultations, we conducted both automatic and manual online search, through which we managed to find addresses of 229 persons (`r ((229/392)*100) %>% round(0)`%). 
+Thereafter, we searched the internet for email addresses of these stakeholders. For the stakeholders retrieved from the transparency register, we conducted an automatic search. We avoided time-consuming manual search, and instead we web-scraped organizations' official websites, and matched the found email patterns with participants' names and initials.[^footnote_email.scraping] Through this method, we managed to find email addresses of 425 stakeholders (`r ((425/3155)*100) %>% round(0)`% of total names in the list). As for the second list of participatants in EFSA meetings and consultations, we conducted both automatic and manual online search, through which we managed to find addresses of 229 persons (`r ((229/392)*100) %>% round(0)`%). 
 
 [^footnote_email.scraping]: Our r code is available at: https://github.com/saaralonbarkat/stakeholders.emails. 
 
-The survey was conducted online through Qualtrics Survey Software, as explained below. Between February-May 2019, we sent these persons email invitations with anonymous links to the survey, followed by three reminders. We sent the messages from our university email address, and invited the stakeholders to fill in the anonymous survey. We also asked them to invite other executives and staff members in their organizations to fill the survey. Importantly, to avoid priming, we did not tell them about the study's focus on EFSA and food regulation. Rather, we generally presented it as an expert survey on regulatory policy at the EU, as a part of our academic study. 
+The survey was conducted online through Qualtrics Survey Software, as explained below. Between February-May 2019, we sent email invitations with anonymous links to the survey, followed by three reminders. We sent the messages from our university email address, and invited the stakeholders to fill in the anonymous survey. We also asked them to invite other executives and staff members in their organizations to fill the survey. Importantly, to avoid priming them about food policy and mitigate potential selection bias, we did not tell them about the study's focus on EFSA and food regulation. Rather, we generally presented it as an expert survey on regulatory policy at the EU. 
 
-In total, `r n.start` people started filling the survey, and `r n.reach_independence` completed the outcome variable items, which represent a sizable response rate of roughly `r (n.reach_independence/n.invitations_effective*100)%>% round(-1)`%.[^footnote_response.rate] More than half of the respondents (`r ((efsa_00 %>% filter(age>=50) %>% nrow())/(efsa_00 %>% drop_na(age) %>% nrow())*100) %>% round(0)`%) are older than 50 years, `r ((efsa_00 %>% filter(female==0) %>% nrow())/(efsa_00 %>% drop_na(female) %>% nrow())*100) %>% round(0)`% of them are men and `r ((efsa_00 %>% filter(education %in% c("3 Master","4 Doctorat")) %>% nrow())/(efsa_00 %>% drop_na(education) %>% nrow())*100) %>% round(0)`% of them have a Master or Doctorate degree. At the beginning of the survey, we asked participants in which type of organization do they work. `r ((efsa_00 %>% filter(organization.type.short=="1-industry") %>% nrow())/(efsa_00 %>% drop_na(organization.type.short) %>% nrow())*100) %>% round(0)`% of respondents reported working in a company or a trade association, `r ((efsa_00 %>% filter(organization.type.short=="2-ngo") %>% nrow())/(efsa_00 %>% drop_na(organization.type.short) %>% nrow())*100) %>% round(0)`% in an NGO, and the remaining `r ((efsa_00 %>% filter(organization.type.short=="0-other") %>% nrow())/(efsa_00 %>% drop_na(organization.type.short) %>% nrow())*100) %>% round(0)`% elsewhere (henceforth referred as "others"). To assess the relevance of EFSA to these respondents, we asked them towards the end of the survey a series of questions regarding their relations to the agency. `r ((efsa_00 %>% filter(informed.efsa>0) %>% nrow())/(efsa_00 %>% drop_na(informed.efsa) %>% nrow())*100) %>% round(0)`% of them indicated that they are well informed about the agency's mandate (more than 0 on a -5 to +5 Likert scale), `r ((efsa_00 %>% filter(affect.decisions.efsa>0) %>% nrow())/(efsa_00 %>% drop_na(affect.decisions.efsa) %>% nrow())*100) %>% round(0)`% reported that the agency’s decisions may affect the operations of their organization and `r ((efsa_00 %>% filter(str_detect(interact.efsa,c("2.|3.|4.|5."))==T) %>% nrow())/(efsa_00 %>% drop_na(interact.efsa) %>% nrow())*100) %>% round(0)`% reported that their organization interacts with EFSA at least once a year. In addition, `r ((efsa_00 %>% filter(organization.area.food==1) %>% nrow())/(efsa_00 %>% drop_na(organization.area.food) %>% nrow())*100) %>% round(0)`% of respondents mentioned at the beginning of the survey the policy domain of "food and agriculture" as most relevant to the operations of their organization. Overall, we believe that our respondents represent a relatively diverse sample of external stakeholders of EFSA. The demographic and organizational characteristics of our sample of respondents are summarized in the supplementary appendix [## TBA ##]. 
+In total, `r n.start` people started filling the survey, and `r n.reach_independence` completed the main part of it, which represent a sizable response rate of roughly `r (n.reach_independence/n.invitations_effective*100)%>% round(-1)`%.[^footnote_response.rate] More than half of the respondents (`r ((efsa_00 %>% filter(age>=50) %>% nrow())/(efsa_00 %>% drop_na(age) %>% nrow())*100) %>% round(0)`%) are older than 50 years, `r ((efsa_00 %>% filter(female==0) %>% nrow())/(efsa_00 %>% drop_na(female) %>% nrow())*100) %>% round(0)`% of them are men and `r ((efsa_00 %>% filter(education %in% c("3 Master","4 Doctorat")) %>% nrow())/(efsa_00 %>% drop_na(education) %>% nrow())*100) %>% round(0)`% of them have a Master or Doctorate degree. `r ((efsa_00 %>% filter(organization.type.short=="1-industry") %>% nrow())/(efsa_00 %>% drop_na(organization.type.short) %>% nrow())*100) %>% round(0)`% of respondents reported working in a company or a trade association, `r ((efsa_00 %>% filter(organization.type.short=="2-ngo") %>% nrow())/(efsa_00 %>% drop_na(organization.type.short) %>% nrow())*100) %>% round(0)`% in an NGO, and the remaining `r ((efsa_00 %>% filter(organization.type.short=="0-other") %>% nrow())/(efsa_00 %>% drop_na(organization.type.short) %>% nrow())*100) %>% round(0)`% elsewhere (henceforth referred as "others"). To assess the relevance of EFSA to these respondents, we asked them towards the end of the survey a series of questions regarding their relations to the agency. `r ((efsa_00 %>% filter(informed.efsa>0) %>% nrow())/(efsa_00 %>% drop_na(informed.efsa) %>% nrow())*100) %>% round(0)`% of them indicated that they are well informed about the agency's mandate (more than 0 on a -5 to +5 Likert scale), `r ((efsa_00 %>% filter(affect.decisions.efsa>0) %>% nrow())/(efsa_00 %>% drop_na(affect.decisions.efsa) %>% nrow())*100) %>% round(0)`% reported that the agency’s decisions may affect the operations of their organization and `r ((efsa_00 %>% filter(str_detect(interact.efsa,c("2.|3.|4.|5."))==T) %>% nrow())/(efsa_00 %>% drop_na(interact.efsa) %>% nrow())*100) %>% round(0)`% reported that their organization interacts with EFSA at least once a year. In addition, `r ((efsa_00 %>% filter(organization.area.food==1) %>% nrow())/(efsa_00 %>% drop_na(organization.area.food) %>% nrow())*100) %>% round(0)`% of respondents mentioned at the beginning of the survey the policy domain of "food and agriculture" as most relevant to the operations of their organization. Overall, we believe that our respondents represent a relatively diverse sample of external stakeholders of EFSA. The demographic and organizational characteristics of our sample of respondents are summarized in the supplementary appendix [## TBA ##]. 
 
 [## TBA - analysis of selection bias, based on comparison between percentage of industry and NGOs in our lists and in the final sample ##].      
 
@@ -127,7 +128,7 @@ In total, `r n.start` people started filling the survey, and `r n.reach_independ
 <br>
 
 ## *Procedure*
-In accordance with the email invitation, the questionnaire was presented to the participants as an expert survey as a part of an academic study on regulatory policy at the EU. After obtaining respondents' consent, we first asked them to specify the type of organization in which they work, as well as the policy areas that are most relevant to the operations of their organization. Thereafter, we asked them about their trust in the EU political institutions (European Commission, Council, Parliament). We then mentioned four EU regulatory agencies (being EFSA one of them), and asked to what extent they perceive them as credible regulators.[^footnote_credibility.pre]  Thereafter, we asked them a set of questions aimed at assessing their prior positions about food safety regulation, and pesticides in particular. To disguise our focus on food policy, we framed this section as questions about new technologies, and the the opportunities they bring versus the threats they pose. We included in that section questions about technologies related to food, as well as to other policy domains. To further avoid priming, we then asked respondents three additional questions regarding the use of Machine Learning algorithms in decision making, in line with the abovementioned frame. 
+In accordance with the email invitation, the questionnaire was presented to the participants as an expert survey related to an academic study on regulatory policy at the EU. After obtaining respondents' consent, we first asked them to specify the type of organization in which they work, as well as the policy areas that are most relevant to the operations of their organization. Thereafter, we asked them about their trust in the EU political institutions (European Commission, Council, Parliament). We then mentioned four EU regulatory agencies (being EFSA one of them), and asked to what extent they perceive them as credible regulators.[^footnote_credibility.pre]  Thereafter, we asked them a set of questions aimed at assessing their prior positions about food safety regulation, and pesticides in particular. To disguise our focus on food policy, we framed this section as questions about new technologies, and the the opportunities they bring versus the threats they pose. We included in that section questions about technologies related to food, as well as to other policy domains. To further avoid priming, we then asked respondents three additional questions regarding the use of Machine Learning algorithms in decision making, in line with the abovementioned frame. 
 
 [^footnote_credibility.pre]: Subject assigned to the independence treatment group, as detailed below, are also told that these agencies “operate independently of the EU political institutions”. We did so in order to further enhance the power of the manipulation. All other items are identical for all respondents.   
 
@@ -136,13 +137,13 @@ We then told participants that we will present them with a recent case of a regu
 Finally, the third page included a description of a decision of EFSA about a specific pesticide. Once more, participants were allocated to one of two pesticide cases. The first regarded a pesticide named *Flupyradifurone*, which was approved by the commission, based on EFSA's risk assessment (##EFSA 2015##). Respondents were explained that EFSA could not identify a high risk of the use of this pesticide, although it did noted completely rule out its risks for human health. The second case regarded another pesticide, *Amitrole*, which was banned by the commission roughly at the same time, based on EFSA's risk assessment (##EFSA 2015##). Respondents were explained that EFSA did identify critical concern regarding the use of the pesticide. We henceforth regard the two cases in short as "approve pesticide" and "ban pesticide" decisions. 
 
 Altogether, the experiment has a factorial design of 2 (Independence: treatment vs. control) x 2 (Decision: approve pesticide vs. ban pesticide). 
-The variations of the cases are presented in `r figure.x=figure.x+1`**Figure `r figure.x`**. The four experimental groups are fairly balanced with respect to the different types of organizations, as well as to demographics, and pre-manipulation variables. [## TBA balance table in the appendix ##] We also confirmed that respondents have read and understood the regulatory decisions. At the end of the survey, we asked respondents whether the ban was approved or banned, and `r ((efsa_00 %>% filter(comprehension.check==1) %>% nrow())/(efsa_00 %>% drop_na(comprehension.check) %>% nrow())*100) %>% round(0)`% of the respondents answered it correctly (without significant differences between the decisions).
+The different versions are presented in `r figure.x=figure.x+1`**Figure `r figure.x`**. The four experimental groups are fairly balanced with respect to the different types of organizations, as well as to demographics, and pre-manipulation variables. [## TBA balance table in the appendix ##] We also confirmed that respondents have read and understood the regulatory decisions. At the end of the survey, we asked respondents whether the ban was approved or banned, and `r ((efsa_00 %>% filter(comprehension.check==1) %>% nrow())/(efsa_00 %>% drop_na(comprehension.check) %>% nrow())*100) %>% round(0)`% of the respondents answered it correctly (without significant differences between the two decisions).
 
 ![](C:/SAAR/UNIVERSITY/R/EFSA/papers/myfigures/manipulations.png) 
+<br>
 
-After reading the description of EFSA's risk assessment, respondents are asked 6 questions about the credibility of decision. Thereafter, they are asked about the independence of EFSA from politicians, as well as from the industry. We also asked them several question about the credibility of EFSA in general and its reputation (Overman, Busuioc and Wood, forthcoming). We then asked them a series of questions about their familiarity with the four agencies mentioned at the beginning of the survey, and their relations of them. We also asked them about the perceived independence of the three other agencies. 
+After reading the description of EFSA's risk assessment, respondents are asked about the credibility of the opinion, as well as about the independence of EFSA in general. Thereafter, they are asked additional general question about the credibility of EFSA in general and its reputation (Overman, Busuioc and Wood, forthcoming). The subjects are then asked about their familiarity with the four agencies mentioned at the beginning of the survey, and the frwquency of interactions with them. Towards the end of the survey, we asked them a set of demographic questions and questions about their professional background. Finally, we asked a comprehension-check question about the case.  
 
-Towards the end of the survey, we asked them a set of demographic questions and questions about their professional background. Finally, we asked a comprehension-check question about the case.        
 
 <br>
 
@@ -157,13 +158,13 @@ credibility.pest.q5))[["total"]][["raw_alpha"]]%>%round(2)
 
 ```
 
-Our outcome variable, the perceived credibility of the decision, is measured in the survey using six Likert scale items, ranging between -5 (strongly disagree) and +5 (strongly agree). These items aim to capture the three aspects of policy credibility. To reiterate, the first aspect regards the extent to which the decision is strictly based on relevant considerations. This is aspect is measured through three items: I believe that the opinion was based strictly on scientific considerations; I believe that the opinion was influenced by political interests (reversed); I believe that the opinion was affected by the industry interests (reversed) (Cronbach’s alpha = `r alpha_considerations`). The second aspect regards the extent to which the decision is based on adequate, professional procedures, and reflect expertise. Is measured through two items: I believe that the opinion was formed after evaluating all the relevant data and evidence; I believe that the assessment of the evidence was based on adequate methods (Cronbach’s alpha = `r alpha_expertise`). Finally, the third aspect regards the time-consistency of the decision, or the extent to which it is perceived as a credible commitment. The latter is measured through the following single item: I believe that EFSA's opinion about the pesticide may change the next time it will be asked to reexamine it (reversed). The six items were presented in a random order, to rule out an assimilation effect. [## TBA assessing fitness of the three components via CFA ##]. 
+Our outcome variable, the perceived credibility of the decision, is measured in the survey using six Likert-scale items, ranging between -5 (strongly disagree) and +5 (strongly agree). These items aim to capture the three aspects of policy credibility, in accordance with our conceptualization of it. To reiterate, the first aspect regards the extent to which the decision is strictly based on relevant considerations. This is aspect is measured through three items: "I believe that the opinion was based strictly on scientific considerations"; "I believe that the opinion was influenced by political interests" (reversed); "I believe that the opinion was affected by the industry interests" (reversed) (Cronbach’s alpha = `r alpha_considerations`). The second aspect regards the extent to which the decision is based on adequate, professional procedures, and reflect expertise. Is measured through two items:" I believe that the opinion was formed after evaluating all the relevant data and evidence"; "I believe that the assessment of the evidence was based on adequate methods" (Cronbach’s alpha = `r alpha_expertise`). Finally, the third aspect regards the time-consistency of the decision, or the extent to which it is perceived as a credible commitment. The latter is measured through the following single item: "I believe that EFSA's opinion about the pesticide may change the next time it will be asked to reexamine it" (reversed). To rule out an assimilation effect, the six items were presented in a random order. [## TBA assessing fitness of the three components via CFA ##]. 
 
-`r figure.x=figure.x+1`**Figure.x `r figure.x`** graphically presents the means and distribution of the three credibility components with regard to the two decisions. Overall, participants tend to perceive both decisions as relatively credible, with the exception that the approve-pesticide decision is not perceived as a credible commitment (*Mean* = `r efsa_00_approve.pest%>% summarise(mean(credibility.pest.commitment,na.rm=T))%>%max()%>%round(2)` on a scale of -5 to 5, only `r ((efsa_00_approve.pest %>% filter(credibility.pest.commitment>0) %>% nrow())/(efsa_00_approve.pest %>% drop_na(credibility.pest.commitment) %>% nrow())*100) %>% round(0)`% of the answers were above 0`). Respondents tend to perceive the ban-pesticide decision as more credible, on average. The three measures are correlated with each other, and are also positively associated with the general items on EFSA's credibility and reputation. It should be noted, however, that the correlation of the latter with the commitment item is weaker. The three credibility measures are also associated with greater trust in the EU institutions, and perceived familiarity with the agency.
+`r figure.x=figure.x+1`**Figure `r figure.x`** graphically presents the means and distribution of the three credibility components with regard to the two decisions. Overall, participants tend to perceive both decisions as relatively credible, with the exception that the approve-pesticide decision is not perceived as a credible commitment (*Mean* = `r efsa_00_approve.pest%>% summarise(mean(credibility.pest.commitment,na.rm=T))%>%max()%>%round(2)` on a scale of -5 to 5, only `r ((efsa_00_approve.pest %>% filter(credibility.pest.commitment>0) %>% nrow())/(efsa_00_approve.pest %>% drop_na(credibility.pest.commitment) %>% nrow())*100) %>% round(0)`% of the answers were above 0`). Respondents tend to perceive the ban-pesticide decision as more credible, on average. The three measures are correlated with each other, and are also positively associated with the general items on EFSA's credibility and reputation. It should be noted, however, that the correlation of the latter with the commitment item is weaker. The three credibility measures are also associated with greater trust in the EU institutions, and perceived familiarity with the agency.
 
 <br>
-
-```{r, echo=FALSE, warning=FALSE, message=F}
+**Figure `r figure.x`: Decision credibility**
+```{r, echo=FALSE, warning=FALSE, message=F, fig.width=6}
 efsa_00 %>% 
   drop_na(ban.pesticide) %>% 
   select(credibility.pest.commitment:credibility.pest.expertise,
@@ -176,28 +177,34 @@ ggplot(aes(x=key,y=value,color=ban.pesticide.lab,shape=ban.pesticide.lab))+
       stat_summary(fun.data = mean_cl_normal, geom = "errorbar", fun.args=list(conf.int=0.95), colour = "red",alpha=0.5,width=0.1,size=1,position=position_dodge(0.5)) + 
   stat_summary(fun.y = mean, geom = "point", colour = "red",alpha=0.5,size=2,position=position_dodge(0.5))+
   scale_y_continuous(limits = c(-5,5),breaks=-5:5)+
+  scale_x_discrete(name="Credibility aspect", labels = c("Considerations",
+                                                         "Expertise",
+                                                         "Commitment"))+
   scale_shape_manual(name = "Case/decision", values=c(1,1),labels = c("Approve pesticide (Flup.)","Ban pesticide (amitrole)"))+
   scale_color_manual(name = "Case/decision", values=c("gray10","gray50"),labels = c("Approve pesticide (Flup.)","Ban pesticide (amitrole)"))+
-  xlab("Credibility aspect")+
   ylab("")+
   theme_tufte()+
-    labs(title = "Fig. 5: Decision credibility by case",
+    labs(title = "",
               subtitle = "",
               caption = "Note: Red dots and bars represent means and 95% CIs")+
   theme(
   plot.caption = element_text(hjust = 0)
   )
 ```
+<br>
 
-Our first explanatory variable is the perceived independence of EFSA. After answering the six credibility questions, participants are asked to state their agreement with the following sentence (again, on a scale of -5 to 5): "EFSA’s opinions can be influenced by EU political institutions (European Commission, Council, Parliament)". For the analyses, we reversed this item, so that high values indicate high independence  (*Mean* = `r efsa_00.t1%>%summarise(mean(independence.polit.efsa))%>%max()%>%round(2)`, *SD* = `r efsa_00.t1%>%summarise(sd(independence.polit.efsa))%>%max()%>%round(2)`, *Median* = `r efsa_00.t1%>%summarise(median(independence.polit.efsa))%>%max()%>%round(2)`). Nevertheless, estimating the observational correlation between the perceived independence of EFSA its credibility still does not enable to effectively depict causal relations between the two variables, due to the concern of endogeneity. We addressed this limitation in this study by including the abovementioned manipulation for EFSA's independence. This enables us to supplement our observational analyses with a more rigorous experimental test. We regard the random assignment to control and treatment conditions as an instrumental variable. In other words, we estimate the extent to which decision credibility is altered due the change in perceived independence that is caused by the manipulation (Hvidman, 2019). Applying an instrumental variable analysis requires three assumptions: First, the instrumental variable (i.e. the independence treatment) is associated to the endogenous explanatory variable (i.e. perceived independence of EFSA). Indeed, our independence manipulation has a positive and significant effect on the perceived independence of EFSA (*Diff* = `r (mean(efsa_00_treatment$independence.polit.efsa,na.rm = T)-mean(efsa_00_control$independence.polit.efsa,na.rm = T)) %>% round(2)` [`r t.test(independence.polit.efsa~treatment,efsa_00)[["conf.int"]][1] %>% round(2)`,`r t.test(independence.polit.efsa~treatment,efsa_00)[["conf.int"]][2] %>% round(2)`], *t* = `r max(t.test(independence.polit.efsa~treatment,efsa_00)[["statistic"]]) %>% abs() %>% round(2)`, *p*<.01).[^footnote_iv.first.stage] Second, the instrument is exogenous, and uncorrelated with the error term of the outcome variable in the model. That assumption is ensured by the random assignment. Third, the instrument is assumed, theoretically, to affect the outcome variable only through its effect on the treatment. Since the treatment condition emphasized the independence of EFSA from political stakeholders, we are capable of making that assumption.               
+Our first explanatory variable is the perceived independence of EFSA from political stakeholders. This variable is measured through the following item: "EFSA’s opinions can be influenced by EU political institutions (European Commission, Council, Parliament)". The item was showed after the abovementioned credibility questions, and had a similar scale of -5 to +5. For the analyses, we reversed this item, so that high values indicate high perceived independence  (*Mean* = `r efsa_00.t1%>%summarise(mean(independence.polit.efsa))%>%max()%>%round(2)`, *SD* = `r efsa_00.t1%>%summarise(sd(independence.polit.efsa))%>%max()%>%round(2)`, *Median* = `r efsa_00.t1%>%summarise(median(independence.polit.efsa))%>%max()%>%round(2)`). However, estimating the correlation between the perceived independence of EFSA and its credibility does not enable to effectively depict causal relations between the two variables, even when controlling for covariates. This is due to the concern of endogeneity. We addressed this limitation in this study by including the abovementioned manipulation for EFSA's independence, which enabled us to supplement our observational analysis with a rigorous experimental test. 
+
+We regard the random assignment to control and treatment independence conditions as an *instrumental variable* - we estimate the extent to which the credibility of the decisions are influenced by the change in the perceived independence that is caused by the manipulation (Hvidman, 2019). Applying an instrumental variable analysis requires three assumptions: First, the instrumental variable (i.e. the independence treatment) is associated to the endogenous explanatory variable (i.e. perceived independence of EFSA). Indeed, our independence manipulation has a positive and significant effect on the perceived independence of EFSA (*Diff* = `r (mean(efsa_00_treatment$independence.polit.efsa,na.rm = T)-mean(efsa_00_control$independence.polit.efsa,na.rm = T)) %>% round(2)` [`r t.test(independence.polit.efsa~treatment,efsa_00)[["conf.int"]][1] %>% round(2)`,`r t.test(independence.polit.efsa~treatment,efsa_00)[["conf.int"]][2] %>% round(2)`], *t* = `r max(t.test(independence.polit.efsa~treatment,efsa_00)[["statistic"]]) %>% abs() %>% round(2)`, *p*<.01).[^footnote_iv.first.stage] Second, the instrument is exogenous, and uncorrelated with the error term of the outcome variable in the model. That assumption is ensured by the random assignment. Third, the instrument is assumed, theoretically, to affect the outcome variable only through its effect on the treatment. Since the treatment condition emphasized the independence of EFSA from political stakeholders, we are capable of making that assumption.               
 
 [^footnote_iv.first.stage]: It should be noted that this correlation is slightly weaker than the recommended standard (*F*>10, or *t*>3.16). This entails that the instrumental variable estimate is likely to be less accurate. Still... [TBA] 
 
-Our second explanatory variable is stakeholders' prior beliefs/positions regarding the policy issue. To account for stakeholders' pre-determined positions regarding the risk of pesticides, we asked directly asked participants in the whether the use of pesticides "mainly brings benefits and opportunities, or rather poses a threat". Participants answered on 11 points scale ranging between -5 (mainly poses a threat) to +5 (mainly brings benefits). This variable, which represents a controversial issue, has a relatively high variation (*Mean* = `r efsa_00%>%summarise(mean(supports.pesticides))%>%max()%>%round(2)`, *SD* = `r efsa_00%>%summarise(sd(supports.pesticides))%>%max()%>%round(2)`, *Median* = `r efsa_00%>%summarise(median(supports.pesticides))%>%max()%>%round(2)`). As anticipated, these views are associated with the distinction between NGOs and industry organizations. `r figure.x=figure.x+1`**Figure.x `r figure.x`** shows the distribution of the variable across the three groups. As shown by the plot, stakeholders from NGOs hold relatively negative beliefs towards the use of pesticides (only `((efsa_00 %>% filter(organization.type.short=="2-ngo",supports.pesticides>0) %>% nrow())/(efsa_00 %>% filter(organization.type.short=="2-ngo") %>%  drop_na(supports.pesticides) %>% nrow())*100) %>% round(0)`% of them were above zero), whereas stakeholders affiliated with the food industry tend to hold a positive view (`((efsa_00 %>% filter(organization.type.short=="1-industry",supports.pesticides<0) %>% nrow())/(efsa_00 %>% filter(organization.type.short=="1-industry") %>%  drop_na(supports.pesticides) %>% nrow())*100) %>% round(0)`% of them reported below zero). Stakeholders from other organizations were spread along the two sides of the scale. In our analyses below, we use both the support pesticide item and the organization groups as measures for participants' prior positions about regulation of risk of pesticides. Furthermore, our random assignment for the two opinions of EFSA (i.e. to ban or approve the pesticide), provides an additional robust check for the role of these prior beliefs. We expect an interaction between the decision manipulation and prior beliefs. 
+Our second explanatory variable is stakeholders' pre-determined positions regarding the risk of pesticides. To account for the latter, we asked participants whether the use of pesticides "mainly brings benefits and opportunities, or rather poses a threat". Participants answered on an 11 points scale ranging between -5 (mainly poses a threat) to +5 (mainly brings benefits). This variable has a relatively high variation among the entire sample (*Mean* = `r efsa_00%>%summarise(mean(supports.pesticides, na.rm=T))%>%max()%>%round(2)`, *SD* = `r efsa_00%>%summarise(sd(supports.pesticides, na.rm=T))%>%max()%>%round(2)`, *Median* = `r efsa_00%>%summarise(median(supports.pesticides, na.rm=T))%>%max()%>%round(2)`). It is positively correlated with perceived independence of EFSA (*r* = `r cor.test(efsa_00$supports.pesticides,efsa_00$independence.polit.efsa)[["estimate"]][["cor"]] %>% round(2)`, *p*<.01). As anticipated, these prior positions are associated with the distinction between the NGOs and the industry. `r figure.x=figure.x+1`**Figure `r figure.x`** shows the distribution of the variable across the three groups of stakeholders. As shown by the plot, stakeholders from NGOs hold relatively negative beliefs towards the use of pesticides (only `r ((efsa_00 %>% filter(organization.type.short=="2-ngo",supports.pesticides>0) %>% nrow())/(efsa_00 %>% filter(organization.type.short=="2-ngo") %>%  drop_na(supports.pesticides) %>% nrow())*100) %>% round(0)`% of them were above zero), whereas stakeholders affiliated with the food industry tend to hold a relatively positive view (`r ((efsa_00 %>% filter(organization.type.short=="1-industry",supports.pesticides<0) %>% nrow())/(efsa_00 %>% filter(organization.type.short=="1-industry") %>%  drop_na(supports.pesticides) %>% nrow())*100) %>% round(0)`% of them reported below zero). Stakeholders from other organizations were spread along the two sides of the scale. These differences are statistically significant ($\chi^2$(`r chisq.test(efsa_00$supports.pesticides,efsa_00$organization.type.short)[["parameter"]] %>% max()`) = `r chisq.test(efsa_00$supports.pesticides,efsa_00$organization.type.short)[["statistic"]][["X-squared"]] %>% round(2)`, *p*<.01). In our analyses below, we use both the support pesticide item and the organization groups as indicators or proxies for participants' prior positions about regulation of risk of pesticides. We expect an interaction between these variables and the decision manipulation (i.e. ban vs. approve pesticide).
+
 
 <br>
-
-```{r, echo=FALSE, warning=FALSE, message=F, fig.width=6}
+**Figure `r figure.x`: Prior beliefs regarding pesticides across stakeholder gropus**
+```{r, echo=FALSE, warning=FALSE, message=F, fig.width=4}
 efsa_00 %>%
   drop_na(organization.type.short) %>% 
   mutate(organization.type.short.t = Recode(organization.type.short,"'0-other'='3-other';'2-ngo'='0-ngo'")) %>% 
@@ -208,15 +215,16 @@ efsa_00 %>%
   scale_y_continuous(name="Support for pesticides",limits = c(-5,5),breaks=-5:5)+
   scale_x_discrete(name="",labels = c("Industry","NGOs","Other"))+
   theme_tufte()+
-  labs(title = "Fig. X: Prior beliefs regarding pesticides across organization type",
+  labs(title = "",
               subtitle = "",
               caption = "Note: Red dots and bars represent means and 95% CIs")+
   theme(
   plot.caption = element_text(hjust = 0)
   )
 ```
+<br>
 
-In addition to the independent variables above, the survey also included control items regarding respondents’ age, gender, educational background, support for EU political institutions, familiarity and intensity of interactions with EFSA and native language. Summary statistics and correlation matrix for all variables are available in the supplementary appendix [## TBA ##].
+In addition to the independent variables above, the survey also included additional items regarding respondents’ age, gender, educational background, support for EU political institutions, familiarity and intensity of interactions with EFSA and native language. Summary statistics and correlation matrix for all variables are available in the supplementary appendix [## TBA ##].
 
 
 <br>
@@ -224,10 +232,11 @@ In addition to the independent variables above, the survey also included control
 
 # Results
 
-
-# Independence vs. priors
+We begin with exploring the observational relations between stakeholders perceptions about the independence of EFSA from politicians and their perceptions about its credibility. `r figure.x=figure.x+1`**Figure `r figure.x`** graphically shows the bivariate correlations between perceived independence and the three aspects of decision credibility. Idneed, perceived independence is  positively correlated with all three aspects. The correlation is stronger for the first dimension of considerations (*r* = `r cor.test(efsa_00.t1$credibility.pest.considerations,efsa_00.t1$independence.polit.efsa)[["estimate"]][["cor"]] %>% round(2)`, *p*<.01), compared with the aspects of expertise (*r* = `r cor.test(efsa_00.t1$credibility.pest.expertise,efsa_00.t1$independence.polit.efsa)[["estimate"]][["cor"]] %>% round(2)`, *p*<.01) and commitment dimensions (*r* = `r cor.test(efsa_00.t1$credibility.pest.commitment,efsa_00.t1$independence.polit.efsa)[["estimate"]][["cor"]] %>% round(2)`, *p*<.01). 
 
 <br>
+
+`**Figure `r figure.x`: Bivariate correlations between perceived independence and credibility**
 
 ```{r, fig.width=8,echo=FALSE,warning=FALSE,message=FALSE}
 efsa_00.t1 %>% 
@@ -244,24 +253,27 @@ efsa_00.t1 %>%
   facet_wrap(~key)+
   theme_tufte()+
   stat_cor(method = "pearson", label.x = 3, label.y = 30)+
-  labs(title = "Fig. X: Bivariate correlation between independence and credibility",
+  labs(title = "Fig. X: ",
               subtitle = "",
               caption = "")+
   theme(
   plot.caption = element_text(hjust = 0)
   )
 ```
-
 <br>
+
+Next, we conduct a multivariate regression analysis, for the three aspects. We examine the effect participants' prior positions on pesticides (in interaction with the decision manipulation), over and above the effect of perceived independence. `r table.x=table.x+1`**Table `r table.x`** shows the regression analyses. For each aspect, we include 4 regression models. First, we regress the variable on perceived independence (Models 1,5,9). Thereafter, we add the decision manipulation (0 = approve pesticide; 1 = ban pesticide) (Models 2,6,10), and the indicators for participants' prior positions - their support for pesticide and the stakeholders groups (the reference category for the groups is "other") (Models 3,7,11). Finally, we add the interaction bewteen the decision manipulation and the prior positions indicators (Models 4,8,12). For all three aspects, the interaction between support for pesticide and ban pesticide is negative and significant. Congruently, the interaction bewteen NGOs and tha ban pesticide decision is positive and significant with regard to considerations and expertise. These interactions indicate that over and above the effect of stakeholders' perceptions about the independence of the agency, participants are significantly more likely to perceive the decision as credible inasmuch as it corresponds to their prior positions. The more a stakeholder perceives pesticides as a safe method, the more she is likely to perceive EFSA's decision to approve a pesticide as more credible then its decision to ban it. Similarly, stakeholders from NGOs tend to perceive a decision to ban a pesticide as more credible then a decision to approve it.   
+
+
 ```{r, results="asis",echo=FALSE,warning=FALSE,message=FALSE}
 
 
 
 tmod1.0.0 <- lm(credibility.pest.considerations~ 
-            ban.pesticide,
+            independence.polit.efsa,
             data=efsa_00.t1)
 
-tmod1.0.1 <- update(tmod1.0.0, . ~ . + independence.polit.efsa)
+tmod1.0.1 <- update(tmod1.0.0, . ~ . + ban.pesticide)
 
 
 tmod1.0.2 <- update(tmod1.0.1, . ~ . + supports.pesticides +
@@ -285,11 +297,6 @@ tmod3.0.1 <- update(tmod1.0.1, credibility.pest.commitment ~ . )
 tmod3.0.2 <- update(tmod1.0.2, credibility.pest.commitment ~ . )
 tmod3.0.3 <- update(tmod1.0.3, credibility.pest.commitment ~ . )
 
-tmod1.0.0 <-tmod1.0.0  
-tmod1.0.1 <- tmod1.0.1
-tmod1.0.2 <- tmod1.0.2
-tmod1.0.3 <- tmod1.0.3
-
 
 
 
@@ -303,8 +310,8 @@ stargazer(tmod1.0.0,tmod1.0.1,tmod1.0.2,tmod1.0.3,
                            "Expertise",
                            "Commitment"),
           covariate.labels=c(
-            "Ban pesticide (0=approve)",
             "Perceived independece",
+            "Ban pesticide (0=approve)",
             "Supports pesticides",
             "Supports pesticides x Ban pesticide",
             "Industry (ref=other)",
@@ -314,18 +321,73 @@ stargazer(tmod1.0.0,tmod1.0.1,tmod1.0.2,tmod1.0.3,
           order = c(1,2,3,6,4,5,6,7,8),
           initial.zero = FALSE,
           notes = "*Notes*: Table entries are non-standardized OLS-regression coefficients, with Standard errors in parentheses. The reference category for the organizations is 'other'",
-          notes.append = FALSE,
-          title = "Table X: Decision credibility. Regression table")
+          notes.append = FALSE)
 
 ```
 &ast;*p*<.1; &ast;&ast;*p*<.05; &ast;&ast;&ast;*p*<.01 (two-tailed).
 
 <br>
 
-## Conditional effect of organization type
+`r figure.x=figure.x+1`**Figure `r figure.x`** graphically shows the interaction between decision manipulation and support for pesticides. Interflex. 
+
+
+
 
 <br>
+**Figure `r figure.x`: Interaction between decision and support for pesticides**
+```{r, fig.width=8,echo=FALSE,warning=FALSE,message=FALSE}
 
+
+p1 <- inter.binning(Y = "credibility.pest.considerations", D = "ban.pesticide", X = "supports.pesticides", Z = c("independence.polit.efsa"), data = efsa_00.t1, nbins = 5,na.rm = TRUE, main = " ")$graph +
+  geom_hline(yintercept = 0, colour = "grey60", linetype = 2)+
+  scale_y_continuous(name = "Marginal effect of ban pesticide",limits = c(-5.2,6),breaks = -5:5)+
+  theme_tufte()  +
+  scale_x_continuous(name = "Support for pesticides",limits = c(-5,5),breaks = -5:5)+
+  labs(title = " ",
+              subtitle = "a. Considerations",
+              caption = "")+
+  theme(
+  plot.caption = element_text(hjust = 0)
+  )
+
+p2 <- inter.binning(Y = "credibility.pest.expertise", D = "ban.pesticide", X = "supports.pesticides", Z = "independence.polit.efsa", data = efsa_00.t1, nbins = 5,na.rm = TRUE, main = " ")$graph +
+  geom_hline(yintercept = 0, colour = "grey60", linetype = 2)+
+  scale_y_continuous(name = "Marginal effect of ban pesticide",limits = c(-5.2,6),breaks = -5:5)+
+  scale_x_continuous(name = "Support for pesticides",limits = c(-5,5),breaks = -5:5)+
+  theme_tufte()  +
+  labs(title = " ",
+              subtitle = "b. Expertise",
+              caption = "")+
+  theme(
+  plot.caption = element_text(hjust = 0)
+  )
+
+p3 <- inter.binning(Y = "credibility.pest.commitment", D = "ban.pesticide", X = "supports.pesticides", Z = "independence.polit.efsa", data = efsa_00.t1, nbins = 5,na.rm = TRUE, main = " ")$graph +
+  geom_hline(yintercept = 0, colour = "grey60", linetype = 2)+
+  scale_y_continuous(name = "Marginal effect of ban pesticide",limits = c(-5.2,6),breaks = -5:5)+
+  scale_x_continuous(name = "Support for pesticides",limits = c(-5,5),breaks = -5:5)+
+  theme_tufte()  +
+  labs(title = " ",
+              subtitle = "c. Commitment",
+              caption = "")+
+  theme(
+  plot.caption = element_text(hjust = 0)
+  )
+
+
+
+ggarrange(p1,p2,p3,
+          ncol = 3,nrow = 1) 
+
+
+
+```
+<br>
+
+`r figure.x=figure.x+1`**Figure `r figure.x`** graphically shows the interaction between decision manipulation and stakeholders' groups. 
+
+<br>
+**Figure `r figure.x`: Interaction between decision and stakeholders' groups**
 ```{r, fig.width=10,echo=FALSE,warning=FALSE,message=FALSE}
 efsa_00 %>% 
   drop_na(credibility.pest.commitment) %>% 
@@ -347,7 +409,7 @@ ggplot(aes(x=organization.type.short,y=value,
   scale_color_manual(guide=F, name = "Organization type", values=c("#2E9FDF","#E7B800","green4"))+
   facet_wrap(~key)+
   theme_tufte() +
-  labs(title = "Fig. 6: Decision credibility across organization groups",
+  labs(title = "",
               subtitle = "",
               caption = "Note: Red dots and bars represent means and 95% CIs")+
   theme(
@@ -355,64 +417,9 @@ ggplot(aes(x=organization.type.short,y=value,
   )
 
 ```
-
 <br>
 
-## Conditional effect of supports pesticide
-
-<br>
-```{r, fig.width=8,echo=FALSE,warning=FALSE,message=FALSE}
-
-
-p1 <- inter.binning(Y = "credibility.pest.considerations", D = "ban.pesticide", X = "supports.pesticides", Z = c("independence.polit.efsa"), data = efsa_00.t1, nbins = 5,na.rm = TRUE, main = " ")$graph +
-  geom_hline(yintercept = 0, colour = "grey60", linetype = 2)+
-  scale_y_continuous(name = "Marginal effect of ban pesticide",limits = c(-5.2,5),breaks = -5:5)+
-  theme_tufte()  +
-  scale_x_continuous(name = "Support for pesticides",limits = c(-5,5),breaks = -5:5)+
-  labs(title = " ",
-              subtitle = "a. Considerations",
-              caption = "")+
-  theme(
-  plot.caption = element_text(hjust = 0)
-  )
-
-p2 <- inter.binning(Y = "credibility.pest.expertise", D = "ban.pesticide", X = "supports.pesticides", Z = "independence.polit.efsa", data = efsa_00.t1, nbins = 5,na.rm = TRUE, main = " ")$graph +
-  geom_hline(yintercept = 0, colour = "grey60", linetype = 2)+
-  scale_y_continuous(name = "Marginal effect of ban pesticide",limits = c(-5.2,5),breaks = -5:5)+
-  scale_x_continuous(name = "Support for pesticides",limits = c(-5,5),breaks = -5:5)+
-  theme_tufte()  +
-  labs(title = " ",
-              subtitle = "b. Expertise",
-              caption = "")+
-  theme(
-  plot.caption = element_text(hjust = 0)
-  )
-
-p3 <- inter.binning(Y = "credibility.pest.commitment", D = "ban.pesticide", X = "supports.pesticides", Z = "independence.polit.efsa", data = efsa_00.t1, nbins = 5,na.rm = TRUE, main = " ")$graph +
-  geom_hline(yintercept = 0, colour = "grey60", linetype = 2)+
-  scale_y_continuous(name = "Marginal effect of ban pesticide",limits = c(-5.2,5),breaks = -5:5)+
-  scale_x_continuous(name = "Support for pesticides",limits = c(-5,5),breaks = -5:5)+
-  theme_tufte()  +
-  labs(title = " ",
-              subtitle = "c. Commitment",
-              caption = "")+
-  theme(
-  plot.caption = element_text(hjust = 0)
-  )
-
-
-
-ggarrange(p1,p2,p3,
-          ncol = 3,nrow = 1) %>% 
-  annotate_figure(fig.lab = "Figure X: Interaction between decision and support for pesticides")
-
-
-
-```
-<br>
-
-
-# Experimental measure for independence 
+## *Experimental measure for independence* 
 
 <br>
 
