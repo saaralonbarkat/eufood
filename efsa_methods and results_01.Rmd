@@ -3,6 +3,9 @@ title: "The persuasion of symbolic elements in government public communications,
 author: '**Saar Alon-Barkat**, **Madalina Busuioc** [alphabetical order]'
 date: " "
 output:
+  word_document: default
+  pdf_document:
+    toc: yes
   html_document:
     theme: flatly
     toc: yes
@@ -10,9 +13,6 @@ output:
       collapsed: no
       smooth_scroll: yes
       toc_depth: 3
-  pdf_document:
-    toc: yes
-  word_document: default
 link-citations: yes
 #bibliography: phd_paper_2.bib
 csl: apa.csl
@@ -121,6 +121,8 @@ The survey was conducted online through Qualtrics Survey Software, as explained 
 
 In total, `r n.start` people started filling the survey, and `r n.reach_independence` completed the main part of it, which represent a sizable response rate of roughly `r (n.reach_independence/n.invitations_effective*100)%>% round(-1)`%.[^footnote_response.rate] More than half of the respondents (`r ((efsa_00 %>% filter(age>=50) %>% nrow())/(efsa_00 %>% drop_na(age) %>% nrow())*100) %>% round(0)`%) are older than 50 years, `r ((efsa_00 %>% filter(female==0) %>% nrow())/(efsa_00 %>% drop_na(female) %>% nrow())*100) %>% round(0)`% of them are men and `r ((efsa_00 %>% filter(education %in% c("3 Master","4 Doctorat")) %>% nrow())/(efsa_00 %>% drop_na(education) %>% nrow())*100) %>% round(0)`% of them have a Master or Doctorate degree. `r ((efsa_00 %>% filter(organization.type.short=="1-industry") %>% nrow())/(efsa_00 %>% drop_na(organization.type.short) %>% nrow())*100) %>% round(0)`% of respondents reported working in a company or a trade association, `r ((efsa_00 %>% filter(organization.type.short=="2-ngo") %>% nrow())/(efsa_00 %>% drop_na(organization.type.short) %>% nrow())*100) %>% round(0)`% in an NGO, and the remaining `r ((efsa_00 %>% filter(organization.type.short=="0-other") %>% nrow())/(efsa_00 %>% drop_na(organization.type.short) %>% nrow())*100) %>% round(0)`% elsewhere (henceforth referred as "others"). To assess the relevance of EFSA to these respondents, we asked them towards the end of the survey a series of questions regarding their relations to the agency. `r ((efsa_00 %>% filter(informed.efsa>0) %>% nrow())/(efsa_00 %>% drop_na(informed.efsa) %>% nrow())*100) %>% round(0)`% of them indicated that they are well informed about the agency's mandate (more than 0 on a -5 to +5 Likert scale), `r ((efsa_00 %>% filter(affect.decisions.efsa>0) %>% nrow())/(efsa_00 %>% drop_na(affect.decisions.efsa) %>% nrow())*100) %>% round(0)`% reported that the agency’s decisions may affect the operations of their organization and `r ((efsa_00 %>% filter(str_detect(interact.efsa,c("2.|3.|4.|5."))==T) %>% nrow())/(efsa_00 %>% drop_na(interact.efsa) %>% nrow())*100) %>% round(0)`% reported that their organization interacts with EFSA at least once a year. In addition, `r ((efsa_00 %>% filter(organization.area.food==1) %>% nrow())/(efsa_00 %>% drop_na(organization.area.food) %>% nrow())*100) %>% round(0)`% of respondents mentioned at the beginning of the survey the policy domain of "food and agriculture" as most relevant to the operations of their organization. Overall, we believe that our respondents represent a relatively diverse sample of external stakeholders of EFSA. The demographic and organizational characteristics of our sample of respondents are summarized in the supplementary appendix [## TBA ##]. 
 
+[## TBA power analysis - We cannot rely on previous studies to assess the effect size of our treatment. This sample size has sufficient power (0.8) to identify an effect of Cohen's D = 0.5. ##]
+
 [## TBA - analysis of selection bias, based on comparison between percentage of industry and NGOs in our lists and in the final sample ##].      
 
 [^footnote_response.rate]: To estimate response rate, we divided the number of observations by the number of invitations while subtracting the email addresses that returned automatic error messages (*n*=45). However, since some of the respondents received the invitation from other participants rather than directly by us, the exact response rate may be somewhat lower.   
@@ -139,6 +141,9 @@ Finally, the third page included a description of a decision of EFSA about a spe
 Altogether, the experiment has a factorial design of 2 (Independence: treatment vs. control) x 2 (Decision: approve pesticide vs. ban pesticide). 
 The different versions are presented in `r figure.x=figure.x+1`**Figure `r figure.x`**. The four experimental groups are fairly balanced with respect to the different types of organizations, as well as to demographics, and pre-manipulation variables. [## TBA balance table in the appendix ##] We also confirmed that respondents have read and understood the regulatory decisions. At the end of the survey, we asked respondents whether the ban was approved or banned, and `r ((efsa_00 %>% filter(comprehension.check==1) %>% nrow())/(efsa_00 %>% drop_na(comprehension.check) %>% nrow())*100) %>% round(0)`% of the respondents answered it correctly (without significant differences between the two decisions).
 
+<br>
+
+**Figure `r figure.x`**
 ![](C:/SAAR/UNIVERSITY/R/EFSA/papers/myfigures/manipulations.png) 
 <br>
 
@@ -236,7 +241,7 @@ We begin with exploring the observational relations between stakeholders percept
 
 <br>
 
-`**Figure `r figure.x`: Bivariate correlations between perceived independence and credibility**
+**Figure `r figure.x`: Bivariate correlations between perceived independence and credibility**
 
 ```{r, fig.width=8,echo=FALSE,warning=FALSE,message=FALSE}
 efsa_00.t1 %>% 
@@ -334,8 +339,7 @@ stargazer(tmod1.0.0,tmod1.0.1,tmod1.0.2,tmod1.0.3,
           order = c(1,2,3,6,4,5,6,7,8),
           initial.zero = FALSE,
           notes = "*Notes*: Table entries are non-standardized OLS-regression coefficients, with Standard errors in parentheses. The reference category for the organizations is 'other'",
-          notes.append = FALSE,
-          out="x.htm")
+          notes.append = FALSE)
 
 ```
 &ast;*p*<.1; &ast;&ast;*p*<.05; &ast;&ast;&ast;*p*<.01 (two-tailed).
@@ -596,7 +600,7 @@ iv.t1.std <- iv.t1/(sd(efsa_00.t1$credibility.pest.considerations,na.rm = T))
 
 ```
 
-We further run OLS and 2SLS instrumental variable regression analysis for the first dimension. These analyses provide a more accurate estimate, by controlling for covariates and estimating the statistical uncertainty `r table.x=table.x+1`**Table `r table.x`** shows the results of these models. All three models control for same covariates in the models presented above. The 2SLS model (Model 3) predics that, a one standard deviation increase in perceived independence *causes* an increase of `r iv.t1.std %>% round(2)` standard deviations increase in considerations dimension  
+We further run OLS and 2SLS instrumental variable regression analysis for the three dimension. These analyses provide a more accurate estimate, by controlling for covariates and estimating the statistical uncertainty `r table.x=table.x+1`**Table `r table.x`** shows the results of these models. All models control for same covariates in the models presented above. Again, through IV analysis, we identify with sufficient confidence only the causal effect of perceived independence on the considerations aspect. The 2SLS model (Model 3) predics that, a one standard deviation increase in perceived independence *causes* an increase of `r iv.t1.std %>% round(2)` standard deviations increase in considerations dimension.   
 
 
 **Table `r table.x`: Instrumental Variable regression analyses**
@@ -606,14 +610,19 @@ We further run OLS and 2SLS instrumental variable regression analysis for the fi
 
 stargazer(tmod1.1stage,
           tmod.rf.1,reg_iv1,
-          #tmod.rf.2,reg_iv2,
-          #tmod.rf.3,reg_iv3,
+          tmod.rf.2,reg_iv2,
+          tmod.rf.3,reg_iv3,
           type="html",
           style = "apsr",
           omit.stat = c("rsq","adj.rsq","ser", "f"),
           dep.var.labels=c("Perceived independence",
-                           "Considerations"),
-          column.labels = c("1st stage (OLS)", "RF (OLS)","IV estimate (2SLS)"),
+                           "Considerations",
+                           "Expertise",
+                           "Commitment"),
+          column.labels = c("1st stage (OLS)", 
+                            "RF (OLS)","IV estimate (2SLS)",
+                            "RF (OLS)","IV estimate (2SLS)",
+                            "RF (OLS)","IV estimate (2SLS)"),
           model.names = F,
           omit = c("ban.pesticide",
                    "supports.pesticides",
@@ -628,11 +637,66 @@ stargazer(tmod1.1stage,
 ```
 &ast;*p*<.1; &ast;&ast;*p*<.05; &ast;&ast;&ast;*p*<.01 (two-tailed).          
 
-
 <br>
 
 
 
+
+
+
+[Other version of table 1...]
+<br>
+
+
+```{r, results="asis",echo=FALSE,warning=FALSE,message=FALSE}
+
+tmod1.0.0 <- lm(credibility.pest.considerations~ 
+            independence.polit.efsa,
+            data=efsa_00.t1)
+
+tmod1.0.1 <- update(tmod1.0.0, . ~ . + ban.pesticide)
+
+
+tmod1.0.2 <- update(tmod1.0.1, . ~ . + supports.pesticides)
+
+tmod1.0.3 <- lm(credibility.pest.considerations~ 
+            independence.polit.efsa + 
+              ban.pesticide*supports.pesticides,
+              data=efsa_00.t1) 
+
+
+
+tmod2.0.0 <- update(tmod1.0.0, credibility.pest.expertise ~ . )
+tmod2.0.1 <- update(tmod1.0.1, credibility.pest.expertise ~ . )
+tmod2.0.2 <- update(tmod1.0.2, credibility.pest.expertise ~ . )
+tmod2.0.3 <- update(tmod1.0.3, credibility.pest.expertise ~ . )
+
+tmod3.0.0 <- update(tmod1.0.0, credibility.pest.commitment ~ . )
+tmod3.0.1 <- update(tmod1.0.1, credibility.pest.commitment ~ . )
+tmod3.0.2 <- update(tmod1.0.2, credibility.pest.commitment ~ . )
+tmod3.0.3 <- update(tmod1.0.3, credibility.pest.commitment ~ . )
+
+
+stargazer(tmod1.0.0,tmod1.0.1,tmod1.0.2,tmod1.0.3,
+          tmod2.0.0,tmod2.0.1,tmod2.0.2,tmod2.0.3,
+          tmod3.0.0,tmod3.0.1,tmod3.0.2,tmod3.0.3,
+          type="html",
+          style = "apsr",
+          omit.stat = c("rsq","ser", "f"),
+                    dep.var.labels=c("Considerations",
+                           "Expertise",
+                           "Commitment"),
+          covariate.labels=c(
+            "Perceived independece",
+            "Ban pesticide (0=approve)",
+            "Supports pesticides",
+            "Supports pesticides x Ban pesticide"),
+
+          initial.zero = FALSE,
+          notes = "*Notes*: Table entries are non-standardized OLS-regression coefficients, with Standard errors in parentheses.",
+          notes.append = FALSE)
+
+```
 
 # END
 
