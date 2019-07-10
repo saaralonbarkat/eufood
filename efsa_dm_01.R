@@ -33,14 +33,8 @@ library(lubridate)
 
 
 #loading raw data CSV file
-efsa_raw_old <- read_csv("C:/SAAR/UNIVERSITY/R/EFSA/data/efsa_data_old.csv") %>% 
-  mutate(Q105=NA)
-efsa_raw_new <- read_csv("C:/SAAR/UNIVERSITY/R/EFSA/data/efsa_data_new.csv") %>% 
-  mutate(survey.name = NA)
-
-efsa_raw_00 <- rbind(efsa_raw_old,
-                     efsa_raw_new)
-
+#efsa_raw_00 <- read_csv("C:/SAAR/UNIVERSITY/R/EFSA/data/efsa_data.csv")
+efsa_raw_00 <- read_csv("https://raw.githubusercontent.com/saaralonbarkat/eufood/master/efsa_data.csv?token=ACU7DGVRKCHELSBHAJW2DUC5F3P5K")
 #removing observations that did not complete any question in the survey. 
   efsa_raw_00 %>% 
   filter(Q1.4==1) ->
@@ -365,7 +359,13 @@ efsa_00 <- efsa_00 %>%
          credibility.pest.q4 = efsa_raw$Q9.5 - 6,
          credibility.pest.q5 = efsa_raw$Q9.6 - 6,
          credibility.pest.q6 = efsa_raw$Q9.7 - 6) %>%
-  mutate_at(vars(starts_with("credibility.pest.")),list(~Recode(.,"-6=NA"))) %>% 
+  mutate_at(vars(starts_with("credibility.pest.")),list(~Recode(.,"-6=NA"))) %>%
+  
+  ##Reversing items 2,3,6
+  mutate(credibility.pest.q2 = -1*credibility.pest.q2,
+         credibility.pest.q3 = -1*credibility.pest.q3,
+         credibility.pest.q6 = -1*credibility.pest.q6) %>%  
+  
 
   mutate(credibility.efsa.post = efsa_raw$Q10.4 - 6,
          credibility.efsa.post.commitment = efsa_raw$Q105 - 6) %>%
@@ -392,6 +392,77 @@ efsa_00 <- efsa_00 %>%
 
 
   
+#Adding other vars
 
+##labels for conditions
+efsa_00 <- efsa_00 %>% 
+  mutate(treatment.lab = treatment %>% Recode("0='Control';1='Treatment'"),
+         ban.pesticide.lab = ban.pesticide %>% Recode("0='Approve pesticide';1='Ban pesticide'"))
+
+##org. types
+efsa_00 <- efsa_00 %>% 
+  mutate(organization.type.short = organization.type.raw %>% 
+           Recode("'non-governmental nonprofit organization'='2-ngo';
+                  c('trade association','company')='1-industry';
+                  else='0-other'"))
+
+##prior food beliefs index
+efsa_00 <- efsa_00 %>% 
+  mutate(prior.beliefs.food = (-1*greediness.food.industry+
+                                 supports.gmo+
+                                 supports.pesticides+
+                                 supports.additives)/4)
+
+##credibility aspects
+
+
+efsa_00 <- efsa_00 %>% 
+  mutate(credibility.pest.index = (credibility.pest.q1+
+                                     credibility.pest.q2+
+                                     credibility.pest.q3+
+                                     credibility.pest.q4+
+                                     credibility.pest.q5+
+                                     credibility.pest.q6)/6,
+         credibility.pest.commitment = credibility.pest.q6,
+         credibility.pest.considerations = (credibility.pest.q1+
+                                              credibility.pest.q2+
+                                              credibility.pest.q3)/3,
+         credibility.pest.expertise = (credibility.pest.q4+
+                                         credibility.pest.q5)/2) %>% 
+  mutate(credibility.pest.index.01 = (credibility.pest.commitment+
+                                        credibility.pest.considerations+
+                                        credibility.pest.expertise)/3)
+
+efsa_00 <- efsa_00 %>% 
+  mutate(reputation.efsa.technical = (reputation.efsa.q1+reputation.efsa.q2+reputation.efsa.q3+reputation.efsa.q4+reputation.efsa.q5)/5,
+         reputation.efsa.performative = (reputation.efsa.q6+reputation.efsa.q7)/2,
+         reputation.efsa.moral = (reputation.efsa.q8+reputation.efsa.q9)/2,
+         reputation.efsa.procedural = (reputation.efsa.q10+reputation.efsa.q11)/2)
+
+#filtering 
+
+efsa_01 <- efsa_00 %>% 
+  filter(comprehension.check==1)
+
+efsa_02 <- efsa_00 %>% 
+  filter(comprehension.check==1,
+         familiarity.pesticide==0)
+
+
+#subsets for pest. cases
+
+efsa_00_ban.pest <- efsa_00 %>% 
+  filter(ban.pesticide==1)
+
+efsa_00_approve.pest <- efsa_00 %>% 
+  filter(ban.pesticide==0)
+
+#subsets for treatment
+
+efsa_00_treatment <- efsa_00 %>% 
+  filter(treatment==1)
+
+efsa_00_control <- efsa_00 %>% 
+  filter(treatment==0)
 
 
