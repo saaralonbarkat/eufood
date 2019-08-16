@@ -33,8 +33,8 @@ library(lubridate)
 
 
 #loading raw data CSV file
-#efsa_raw_00 <- read_csv("C:/SAAR/UNIVERSITY/R/EFSA/data/efsa_data.csv")
-efsa_raw_00 <- read_csv("https://raw.githubusercontent.com/saaralonbarkat/eufood/master/efsa_data.csv?token=ACU7DGVRKCHELSBHAJW2DUC5F3P5K")
+efsa_raw_00 <- read_csv("C:/SAAR/UNIVERSITY/R/EFSA/data/efsa_data.csv")
+#efsa_raw_00 <- read_csv("https://raw.githubusercontent.com/saaralonbarkat/eufood/master/data/efsa_data.csv?token=ACU7DGRIR4RZZQW25SQTPNK5F3QXI")
 #removing observations that did not complete any question in the survey. 
   efsa_raw_00 %>% 
   filter(Q1.4==1) ->
@@ -438,6 +438,9 @@ efsa_00 <- efsa_00 %>%
          reputation.efsa.performative = (reputation.efsa.q6+reputation.efsa.q7)/2,
          reputation.efsa.moral = (reputation.efsa.q8+reputation.efsa.q9)/2,
          reputation.efsa.procedural = (reputation.efsa.q10+reputation.efsa.q11)/2)
+
+efsa_00 <- efsa_00 %>% 
+  mutate(timer = ((end.date-start.date)%>%as.numeric())/60)
 
 #filtering 
 

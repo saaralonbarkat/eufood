@@ -1,0 +1,740 @@
+---
+title: "Supplementary appendix"
+author: ''
+date: " "
+output:
+  html_document:
+    theme: flatly
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+      toc_depth: 3
+  pdf_document:
+    toc: yes
+  word_document: default
+bibliography: efsa.bib
+csl: https://raw.githubusercontent.com/citation-style-language/styles/master/chicago-author-date.csl
+urlcolor: blue
+always_allow_html: yes
+---
+
+<br>
+
+Draft, last edited at `r Sys.Date()`.
+
+
+```{r silent-packages, echo = FALSE, eval = TRUE, message=FALSE, include = FALSE}
+library(sjPlot)
+library(tidyverse)
+library(car)
+library(reshape2)
+library(viridis)
+library(ggthemes)
+library(corrr)
+library(kableExtra)
+library(dotwhisker)
+library(sjmisc)
+library(interflex)
+library(effsize)
+library(broom)
+library(sjstats)
+library(stargazer)
+library(AER)
+library(ggpubr)
+library(lavaan)
+
+
+```
+
+```{r set-global-options, echo = FALSE}
+knitr::opts_chunk$set(eval = TRUE, 
+                      echo = FALSE, 
+                      message=FALSE,
+                      warning = FALSE,
+                      cache = FALSE)
+
+```
+
+
+```{r , include=FALSE, echo=FALSE,warning=FALSE,message=FALSE}
+#data
+
+source("C:/SAAR/UNIVERSITY/R/EFSA/code/efsa_dm_01.R")#change to your directory path
+#source("https://raw.githubusercontent.com/saaralonbarkat/eufood/master/code/efsa_dm_01.R?token=ACU7DGTSVSI2B2UFAE776CC5F3Q3M")
+
+
+efsa_00.t1 <- efsa_00 %>% 
+  drop_na(independence.polit.efsa) %>% 
+  data.frame() %>% 
+  mutate(approve.pesticide = ban.pesticide %>% Recode("0=1;1=0"))
+
+```
+
+```{r, echo=FALSE, warning=FALSE, message=F}
+#Figures and tables
+table.x=0
+figure.x=0
+```
+
+```{r}
+set_theme(
+  base=theme_tufte(),
+  geom.outline.size = 0.01,
+  geom.outline.color = "white", 
+  geom.label.size = 3,
+  geom.label.color = "grey50")
+```
+
+
+<br>
+
+# Sample characteristics
+
+<br>
+
+
+
+**Gender**
+```{r, echo=FALSE,warning=FALSE,message=FALSE}
+t1 <- efsa_00 %>% 
+  drop_na(female) %>% 
+  mutate(female.lab = Recode(female,"0='Men';1='Women'"))
+
+t2 <- t1 %>%
+  group_by(female.lab) %>% 
+  tally() %>% 
+  mutate(percentage = ((n/nrow(t1)*100) %>% round(1)))
+
+t2 %>% 
+  kable(col.names = c("",
+                      "n",
+                      "%")) %>% 
+    kable_styling(bootstrap_options = c("condensed"),
+                full_width = F,
+                position = "left")
+
+```
+
+<br>
+
+**Age**
+```{r, echo=FALSE,warning=FALSE,message=FALSE}
+t1 <- efsa_00 %>%
+  drop_na(age) %>% 
+  mutate(age.lab = Recode(age,"20='20s';
+                                30='30s';
+                                40='40s';
+                                50='50s';
+                                60='60s';
+                                70='70s'")) 
+
+t2 <- t1 %>%
+  group_by(age.lab) %>% 
+  tally() %>% 
+  mutate(percentage = ((n/nrow(t1)*100) %>% round(1)))
+
+t2 %>% 
+  kable(col.names = c("",
+                      "n",
+                      "%")) %>% 
+    kable_styling(bootstrap_options = c("condensed"),
+                full_width = F,
+                position = "left")
+```
+
+<br>
+
+**Education level**
+
+```{r}
+t1 <- efsa_00 %>%
+  drop_na(education) 
+
+t2 <- t1 %>%
+  group_by(education) %>% 
+  tally() %>% 
+  mutate(percentage = ((n/nrow(t1)*100) %>% round(1)))
+
+t2 %>% 
+  kable(col.names = c("",
+                      "n",
+                      "%")) %>% 
+    kable_styling(bootstrap_options = c("condensed"),
+                full_width = F,
+                position = "left")
+```
+
+<br>
+
+**Discipline**
+
+```{r}
+select(efsa_00,1) %>%
+  mutate(education.discipline.1 = ifelse(efsa_raw$Q13.5_1==1,1,NA),
+         education.discipline.2 = ifelse(efsa_raw$Q13.5_2==1,1,NA),
+         education.discipline.3 = ifelse(efsa_raw$Q13.5_3==1,1,NA),
+         education.discipline.4 = ifelse(efsa_raw$Q13.5_4==1,1,NA),
+         education.discipline.5 = ifelse(efsa_raw$Q13.5_5==1,1,NA),
+         education.discipline.6 = ifelse(efsa_raw$Q13.5_6==1,1,NA),
+         education.discipline.7 = ifelse(efsa_raw$Q13.5_7==1,1,NA),
+         education.discipline.8 = ifelse(efsa_raw$Q13.5_8==1,1,NA),
+         education.discipline.9 = ifelse(efsa_raw$Q13.5_9==1,1,NA),
+         education.discipline.10 = ifelse(efsa_raw$Q13.5_10==1,1,NA)) ->
+    t1
+
+t2 <- data.frame(discipline = c("Economics or Business Management",
+                                   "Law",
+                                   "Biology",
+                                   "Chemistry",
+                                   "Physics",
+                                   "Engineering or Computer Science",
+                                   "Political Science, Governance, Public Policy or Public Administration",
+                                   "Communication",
+                                   "Sociology",
+                                   "Psychology")) %>% 
+  mutate(n = c(filter(t1,education.discipline.1==1) %>% nrow(),
+                        filter(t1,education.discipline.2==1) %>% nrow(),
+                        filter(t1,education.discipline.3==1) %>% nrow(),
+                        filter(t1,education.discipline.4==1) %>% nrow(),
+                        filter(t1,education.discipline.5==1) %>% nrow(),
+                        filter(t1,education.discipline.6==1) %>% nrow(),
+                        filter(t1,education.discipline.7==1) %>% nrow(),
+                        filter(t1,education.discipline.8==1) %>% nrow(),
+                        filter(t1,education.discipline.9==1) %>% nrow(),
+                        filter(t1,education.discipline.10==1) %>% nrow())) %>% 
+  mutate(percentage = ((n/nrow(t1)*100) %>% round(1))) %>% 
+  arrange(desc(n))
+
+
+t2 %>% 
+  kable(col.names = c("Discipline",
+                      "n",
+                      "%")) %>% 
+    kable_styling(bootstrap_options = c("condensed"),
+                full_width = F,
+                position = "left")
+
+```
+<font size="0.5">
+
+*Note: Participants could report more than one discipline.
+
+</font>  
+
+<br>
+
+**Native language**
+
+```{r}
+select(efsa_00,1) %>%
+  mutate(native.language.english = ifelse(efsa_raw$Q13.7==1,1,NA),
+         native.language.French = ifelse(efsa_raw$Q13.8_1==1,1,NA),
+         native.language.German = ifelse(efsa_raw$Q13.8_2==1,1,NA),
+         native.language.Spanish = ifelse(efsa_raw$Q13.8_4==1,1,NA),
+         native.language.Italian = ifelse(efsa_raw$Q13.8_5==1,1,NA),
+         native.language.Dutch = ifelse(efsa_raw$Q13.8_6==1,1,NA),
+         native.language.Portuguese = ifelse(efsa_raw$Q13.8_7==1,1,NA)) ->
+    t1
+
+t2 <- data.frame(language = c("English",
+                                   "French",
+                                   "German",
+                                   "Spanish",
+                                   "Italian",
+                                   "Dutch",
+                                   "Portuguese")) %>% 
+  mutate(n = c(filter(t1,native.language.english==1) %>% nrow(),
+                        filter(t1,native.language.French==1) %>% nrow(),
+                        filter(t1,native.language.German==1) %>% nrow(),
+                        filter(t1,native.language.Spanish==1) %>% nrow(),
+                        filter(t1,native.language.Italian==1) %>% nrow(),
+                        filter(t1,native.language.Dutch==1) %>% nrow(),
+                        filter(t1,native.language.Portuguese==1) %>% nrow())) %>% 
+  mutate(percentage = ((n/nrow(t1)*100) %>% round(1))) %>% 
+  arrange(desc(n))
+
+
+t2 %>% 
+  kable(col.names = c("Language",
+                      "n",
+                      "%")) %>% 
+    kable_styling(bootstrap_options = c("condensed"),
+                full_width = F,
+                position = "left")
+
+```
+<font size="0.5">
+
+*Note: Participants could report more than one native language.
+
+</font> 
+
+<br>
+
+**Organization type**
+
+```{r, echo=FALSE,warning=FALSE,message=FALSE}
+t1 <- efsa_00 %>% 
+  drop_na(organization.type.raw)
+
+t2 <- t1 %>%
+  group_by(organization.type.raw) %>% 
+  tally() %>% 
+  mutate(percentage = ((n/nrow(t1)*100) %>% round(1)))%>% 
+  arrange(desc(n))
+
+t2 %>% 
+  kable(col.names = c("Organization type",
+                      "n",
+                      "%")) %>% 
+    kable_styling(bootstrap_options = c("condensed"),
+                full_width = F,
+                position = "left")
+
+```
+
+
+<br>
+
+**Main policy domain of organization**
+
+```{r}
+
+select(efsa_00,1) %>%
+  mutate(organization.area.1 = ifelse(efsa_raw$Q1.5_1==1,1,NA),
+         organization.area.2 = ifelse(efsa_raw$Q1.5_2==1,1,NA),
+         organization.area.3 = ifelse(efsa_raw$Q1.5_3==1,1,NA),
+         organization.area.4 = ifelse(efsa_raw$Q1.5_4==1,1,NA),
+         organization.area.5 = ifelse(efsa_raw$Q1.5_5==1,1,NA),
+         organization.area.6 = ifelse(efsa_raw$Q1.5_6==1,1,NA)) ->
+  t1
+
+
+t2 <- data.frame(area = c("Environment",
+                                   "Telecommunications",
+                                   "Food and Agriculture",
+                                   "Health",
+                                   "Financial services",
+                                   "Energy")) %>% 
+  mutate(n = c(filter(t1,organization.area.1==1) %>% nrow(),
+                        filter(t1,organization.area.2==1) %>% nrow(),
+                        filter(t1,organization.area.3==1) %>% nrow(),
+                        filter(t1,organization.area.4==1) %>% nrow(),
+                        filter(t1,organization.area.5==1) %>% nrow(),
+                        filter(t1,organization.area.6==1) %>% nrow())) %>% 
+  mutate(percentage = ((n/nrow(t1)*100) %>% round(1)))%>% 
+  arrange(desc(n))
+
+t2 %>% 
+  kable(col.names = c("Policy domain",
+                      "n",
+                      "%")) %>% 
+    kable_styling(bootstrap_options = c("condensed"),
+                full_width = F,
+                position = "left")
+
+```
+<font size="0.5">
+
+*Note: Participants could report more than one policy domain.
+
+</font> 
+
+
+<br>
+
+**Interaction of organization with EFSA**
+
+```{r, echo=FALSE,warning=FALSE,message=FALSE}
+t1 <- efsa_00 %>% 
+  drop_na(interact.efsa)
+
+t2 <- t1 %>%
+  group_by(interact.efsa) %>% 
+  tally() %>% 
+  mutate(percentage = ((n/nrow(t1)*100) %>% round(1)))
+t2 %>% 
+  kable(col.names = c("",
+                      "n",
+                      "%")) %>% 
+    kable_styling(bootstrap_options = c("condensed"),
+                full_width = F,
+                position = "left")
+
+```
+
+<br>
+
+# Participants' relations with EFSA 
+
+I am well informed about the agency's mandate.
+
+```{r}
+sjp.frq(efsa_00$informed.efsa,
+        ylim = c(0,80),
+        geom.colors = alpha("dodgerblue2",0.8),
+        axis.title = "")+ 
+  theme_tufte()
+```
+
+<br>
+
+The agency’s decisions may affect the operations of the organization in which I work.
+
+```{r}
+sjp.frq(efsa_00$affect.decisions.efsa,
+        ylim = c(0,80),
+        geom.colors = alpha("dodgerblue2",0.8),
+        axis.title = "")+ 
+  theme_tufte()
+```
+
+<br>
+
+How often does your organization interact with the following agencies?
+
+```{r}
+sjp.frq(efsa_00$interact.efsa,
+        ylim = c(0,80),
+        geom.colors = alpha("dodgerblue2",0.8),
+        axis.title = "")+ 
+  theme_tufte()
+```
+
+
+<br>
+
+# Outcome variables
+
+
+## Distributions of items
+
+* Item 1: I believe that the opinion was based strictly on scientific considerations. 
+
+```{r}
+efsa_00 %>% 
+  drop_na(ban.pesticide.lab) %>% 
+  ggplot(aes(x=credibility.pest.q1)) +
+  geom_bar(fill="dodgerblue2",width = 0.75,alpha=0.8)+
+  scale_x_continuous(name="",limits = c(-6,6),breaks = -5:5)+
+  facet_wrap(~ban.pesticide.lab)+
+  theme_tufte()
+```
+
+<br>
+
+* Item 2: I believe that the opinion was influenced by political interests. (reversed)
+
+```{r}
+efsa_00 %>% 
+  drop_na(ban.pesticide.lab) %>% 
+  ggplot(aes(x=credibility.pest.q2)) +
+  geom_bar(fill="dodgerblue2",width = 0.75,alpha=0.8)+
+  scale_x_continuous(name="",limits = c(-6,6),breaks = -5:5)+
+  facet_wrap(~ban.pesticide.lab)+
+  theme_tufte()
+```
+
+* Item 3: I believe that the opinion was affected by the industry interests. (reversed)
+```{r}
+efsa_00 %>% 
+  drop_na(ban.pesticide.lab) %>% 
+  ggplot(aes(x=credibility.pest.q3)) +
+  geom_bar(fill="dodgerblue2",width = 0.75,alpha=0.8)+
+  scale_x_continuous(name="",limits = c(-6,6),breaks = -5:5)+
+  facet_wrap(~ban.pesticide.lab)+
+  theme_tufte()
+```
+
+<br>
+
+* Item 4: I believe that the opinion was formed after evaluating all the relevant data and evidence. 
+
+```{r}
+efsa_00 %>% 
+  drop_na(ban.pesticide.lab) %>% 
+  ggplot(aes(x=credibility.pest.q4)) +
+  geom_bar(fill="dodgerblue2",width = 0.75,alpha=0.8)+
+  scale_x_continuous(name="",limits = c(-6,6),breaks = -5:5)+
+  facet_wrap(~ban.pesticide.lab)+
+  theme_tufte()
+```
+
+<br>
+
+* Item 5: I believe that the assessment of the evidence was based on adequate methods. 
+```{r}
+efsa_00 %>% 
+  drop_na(ban.pesticide.lab) %>% 
+  ggplot(aes(x=credibility.pest.q5)) +
+  geom_bar(fill="dodgerblue2",width = 0.75,alpha=0.8)+
+  scale_x_continuous(name="",limits = c(-6,6),breaks = -5:5)+
+  facet_wrap(~ban.pesticide.lab)+
+  theme_tufte()
+```
+<br>
+
+* Item 6: I believe that EFSA's opinion about the pesticide may change the next time it will be asked to reexamine it. (reversed)
+```{r}
+efsa_00 %>% 
+  drop_na(ban.pesticide.lab) %>% 
+  ggplot(aes(x=credibility.pest.q6)) +
+  geom_bar(fill="dodgerblue2",width = 0.75,alpha=0.8)+
+  scale_x_continuous(name="",limits = c(-6,6),breaks = -5:5)+
+  facet_wrap(~ban.pesticide.lab)+
+  theme_tufte()
+```
+
+<br>
+
+## Correlation matrix
+
+```{r, echo=FALSE,warning=FALSE,message=FALSE}
+efsa_00 %>% 
+  select(credibility.pest.q1:credibility.pest.q6) %>%
+  
+  sjt.corr(triangle="lower",
+           remove.spaces=T,
+           p.numeric = T,
+           fade.ns = F,
+           digits = 2,
+           na.deletion="pairwise",
+           var.labels = c("1",
+                          "2",
+                          "3",
+                          "4",
+                          "5",
+                          "6"))
+```
+
+
+<br>
+
+
+## Factor analysis
+
+
+One-factor model:
+```{r,echo = TRUE}
+cfa.model.0 <- ' policy.credibility  =~ credibility.pest.q1 + credibility.pest.q2 + credibility.pest.q3 + credibility.pest.q4 + credibility.pest.q5 + credibility.pest.q6 '
+
+fit0 <- cfa(cfa.model.0, 
+           std.lv=TRUE,  
+           missing="fiml",  
+           data=efsa_00)
+
+summary(fit0, fit.measures=TRUE, 
+        estimates = F,
+        standardized=TRUE)
+```
+
+<br>
+
+Three-factors model:
+
+```{r,echo = TRUE}
+cfa.model.1 <- ' non.interference  =~ credibility.pest.q1 + credibility.pest.q2 + credibility.pest.q3
+              expert.based =~ credibility.pest.q4 + credibility.pest.q5
+              stability   =~ credibility.pest.q6 '
+
+fit1 <- cfa(cfa.model.1, 
+           std.lv=TRUE,  
+           missing="fiml",  
+           data=efsa_00)
+
+summary(fit1, fit.measures=TRUE, 
+        estimates = F,standardized=TRUE)
+```
+
+<br>
+
+**Factor Loadings**
+
+```{r}
+parameterEstimates(fit1, standardized=TRUE) %>% 
+  filter(op == "=~") %>% 
+  select('Latent Factor'=lhs, Indicator=rhs, B=est, SE=se, Z=z, 'p-value'=pvalue, Beta=std.all) %>% 
+  mutate(Indicator = str_c("Item ",1:6)) %>% 
+  kable(digits = 3)%>% 
+    kable_styling(bootstrap_options = c("condensed"),
+                full_width = F,
+                position = "left")%>%
+  collapse_rows(columns = 1, valign = "top")
+```
+
+
+<br>
+
+
+# Summary statistics
+
+```{r,results="asis", echo=FALSE,warning=FALSE,message=FALSE}
+t1 <- efsa_00 %>% 
+  select(credibility.pest.commitment,
+         credibility.pest.considerations,
+         credibility.pest.expertise,
+         independence.polit.efsa,
+         ban.pesticide,
+         treatment,
+         supports.pesticides,
+         greediness.food.industry,
+         trust.eu.commission,
+         trust.eu.parliament,
+         trust.eu.council,
+         female,
+         affect.decisions.efsa,
+         informed.efsa,
+         credibility.efsa.pre) %>% 
+  descr() %>% 
+  data.frame() %>% 
+  select(-type,
+         -label,
+         -NA.prc,
+         -se,
+         -trimmed,
+         -skew) %>% 
+mutate_at(vars(c("mean","sd","md")),funs(round(.,3)))
+rownames(t1) <- 1:nrow(t1)
+
+t1 %>% 
+  kable(col.names = c("variable",
+                      "n",
+                      "Mean",
+                      "sd",
+                      "Median",
+                      "Range")) %>% 
+    kable_styling(bootstrap_options = c("condensed"),
+                full_width = F,
+                position = "left")
+```
+
+<br>
+```{r, echo=FALSE,warning=FALSE,message=FALSE}
+efsa_00 %>% 
+  select(credibility.pest.commitment,
+         credibility.pest.considerations,
+         credibility.pest.expertise,
+         independence.polit.efsa,
+         ban.pesticide,
+         treatment,
+         supports.pesticides,
+         greediness.food.industry,
+         trust.eu.commission,
+         trust.eu.parliament,
+         trust.eu.council,
+         female,
+         affect.decisions.efsa,
+         informed.efsa,
+         credibility.efsa.pre) %>%
+  
+  sjt.corr(triangle="lower",
+           remove.spaces=T,
+           p.numeric = T,
+           fade.ns = F,
+           digits = 2,
+           na.deletion="pairwise")
+```
+
+<br>
+
+# Supplementary analyses
+
+* Excluding those who did not answer correctly on the comprehension question. 
+
+* Excluding those who are not familiar with EFSA. 
+
+* Moving Item 1. 
+
+
+<br>
+
+# Survey
+
+**Expert Survey - Regulatory Policy in the EU**  
+   
+
+Dear Participant, 
+
+We are academic researchers from the Institute of Public Administration, Leiden University, studying regulatory policy in the European Union. We are interested in exploring how relevant stakeholders across the EU evaluate specific aspects of regulatory policy.     
+
+As a stakeholder of some of the EU regulatory bodies, we believe that you have specific knowledge and expertise that is invaluable to our study. Therefore, we would be grateful if you would be willing to contribute to our study by filling in this expert survey.      
+
+The survey begins with general questions about your evaluation of EU regulatory institutions, as well as challenges faced by these bodies. Thereafter, you will be asked about a specific regulatory policy area, in your case - food safety policy. Filling in the survey takes approximately 10-15 minutes.       
+
+The survey is voluntary and anonymous. You will not be asked to identify yourself or your organization. The data collected will be used for research purposes only. You may withdraw from the study at any time. Please fill in the survey individually.      
+
+For any further questions about the research, you may contact us personally.         
+ 
+ 
+Sincerely, 
+
+AUTHORS   
+
+<br>
+
+In order to indicate your consent to participate in the research, please press below: 
+o	I agree to participate in the study. 
+
+<br>
+
+Before filling the expert survey, please answer the questions below:
+
+
+
+Q1.5 
+
+Which of the following regulatory policy areas are most relevant to the operations of your organization? 
+
+1. Environment  
+
+2. Telecommunications  
+
+3. Food and Agriculture   
+
+4.	Health  
+
+5. Financial services   
+
+6.	Energy  
+
+7.	Other:  ________________________________________________
+
+
+
+Q1.6 
+
+In which type of organization do you currently work? 
+
+1. Consultancy firm 
+
+2.	Company   
+
+3.	Trade or business association 
+
+4.	Professional association  
+
+5.	Non-governmental nonprofit organization 
+
+6.	Research institute
+
+7.	Law firm 
+
+8.	Other:  ________________________________________________
+
+
+<br>
+
+First, we would like to ask you a few general questions regarding your opinion about several EU institutions and bodies. 
+
+<br>
+
+Q2.2 
+
+To what extent do you trust the following EU institutions?
+
+* European Commission 		
+* European Parliament
+* Council of the European Union 
+
+
