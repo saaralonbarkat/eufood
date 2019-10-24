@@ -33,7 +33,7 @@ library(viridis)
 library(ggthemes)
 library(corrr)
 library(kableExtra)
-#library(dotwhisker)
+library(dotwhisker)
 library(sjmisc)
 library(interflex)
 library(effsize)
@@ -42,7 +42,6 @@ library(sjstats)
 library(stargazer)
 library(AER)
 library(ggpubr)
-library(dotwhisker)
 
 ```
 
@@ -169,7 +168,7 @@ We constructed a list of names, organizational affiliation and contact details o
 
 [^footnote_construction_lists]: All sources were downloaded on November 2018.   
 
-For the stakeholders retrieved from the transparency register, we conducted an automatic search to retrieve their email addresses by web-scrapping their organizations’ official websites, and matching the found email patterns with participants’ names and initials.[^footnote_email.scraping] Through this method, we retrieved email addresses of 425 stakeholders (`r ((425/3155)*100) %>% round(0)`% of total names in the list). As for the list of participants in EFSA meetings and consultations, we conducted both automatic and manual online searches, through which we managed to retrieve emails of 229 stakeholders (`r ((229/392)*100) %>% round(0)`%). 
+For the list of participants in EFSA meetings and consultations, we conducted both automatic and manual online searches, through which we managed to retrieve emails of 229 stakeholders (`r ((229/392)*100) %>% round(0)`%). As for the stakeholders retrieved from the transparency register, we conducted an automatic search to retrieve their email addresses by web-scrapping their organizations’ official websites, and matching the found email patterns with participants’ names and initials.[^footnote_email.scraping] Through this method, we retrieved email addresses of 425 stakeholders (`r ((425/3155)*100) %>% round(0)`% of total names in the list). 
 
 [^footnote_email.scraping]: The codes will be available online at the project's website.
 
@@ -285,9 +284,9 @@ In addition to the independent variables above, the survey also included additio
 
 Summary statistics and correlation matrix for all variables are available in the supplementary appendix.
 
-[^footnote_balance_exception]: One exception is that the independence treatment group has relatively more participants not from NGOs or industry organizations (*p*=`r chisq.test(efsa_00.t1$treatment,efsa_00.t1$organization.type.short)[["p.value"]] %>% round(2)`). To adjust for small finite-sample imbalances, we control for covariates in the regression analyses.[##TBA##]  
+[^footnote_balance_exception]: One exception is that the independence treatment group has relatively more participants not from NGOs or industry organizations (*p*=`r chisq.test(efsa_00.t1$treatment,efsa_00.t1$organization.type.short)[["p.value"]] %>% round(2)`). To adjust for small finite-sample imbalances, we control for covariates in the regression analyses.  
 
-[^footnote_comprehension_check]: The comprehension-check scores are fairly similar across the two regulatory decisions, with no statistically significant differences. In robust analyses, reported in the supplementary appendix, we excluded from the analysis the few respondents that did not answer the question correctly, with no major changes to the results [## TBA ##].  
+[^footnote_comprehension_check]: The comprehension-check scores are fairly similar across the two regulatory decisions, with no statistically significant differences. In robust analyses, reported in the supplementary appendix, we excluded from the analysis the few respondents that did not answer the question correctly.  
 
 **Table `r table.x`: Balancing table**
 
@@ -753,7 +752,7 @@ We now turn to our experimental examination of the effect of perceived independe
 
 We regard this random assignment as an *instrumental variable* - we estimate the extent to which the credibility of the decisions are influenced by the change in the perceived independence that is caused by the manipulation [@hvidman2019citizens]. Applying an instrumental variable analysis requires three assumptions: First, the instrumental variable (i.e. the independence treatment) is associated to the endogenous explanatory variable (i.e. perceived independence of EFSA). Indeed, our independence manipulation has a positive and significant effect on the perceived independence of EFSA (*Diff* = `r (mean(efsa_00_treatment$independence.polit.efsa,na.rm = T)-mean(efsa_00_control$independence.polit.efsa,na.rm = T)) %>% round(2)` [`r t.test(independence.polit.efsa~treatment,efsa_00)[["conf.int"]][1] %>% round(2)`,`r t.test(independence.polit.efsa~treatment,efsa_00)[["conf.int"]][2] %>% round(2)`], *t* = `r max(t.test(independence.polit.efsa~treatment,efsa_00)[["statistic"]]) %>% abs() %>% round(2)`, *p*<.01).[^footnote_iv.first.stage] Second, the instrument is exogenous, and uncorrelated with the error term of the outcome variable in the model. That assumption is ensured by the random assignment. Third, the instrument is assumed, theoretically, to affect the outcome variable only through its effect on the treatment. Since the treatment condition emphasized the independence of EFSA from political stakeholders, we are capable of making that assumption.               
 
-[^footnote_iv.first.stage]: It should be noted that this correlation is slightly weaker than the recommended standard (*F*>10, or *t*>3.16). This entails that the instrumental variable estimate is likely to be less accurate. Still... [TBA] 
+[^footnote_iv.first.stage]: It should be noted that this correlation is slightly weaker than the recommended standard (*F*>10, or *t*>3.16).  
 
 
 `r table.x=table.x+1`**Table `r table.x`** compares the perceived independence and the three credibility aspects between the control and treatment conditions. The first row shows the differences in perceived personal relevance (*the first stage*). Thereafter, for each of the three credibility aspects, we show the raw differences between the two groups (*the reduced form*) and then the instrumental variable (IV) estimate. The reduced form can be interpreted as the causal effect of priming stakeholders about the independence of EFSA. The IV estimate, which equals to the difference in credibility divided by the difference in perceived independence, represents the effect of perceived independence attributed to the manipulation. The findings reveal that the *participants assigned to the independence treatment condition reported, on average, higher values for all three dimensions of credibility (reduced form), yet these differences are significant only in relation to the political non-interference dimension* (*p* = `r (t.test(credibility.pest.considerations~treatment,efsa_00 %>% drop_na(independence.polit.efsa))[["p.value"]]/2) %>% round(3)`, one-tailed test).    
@@ -936,13 +935,12 @@ models <- rbind(models.observational.std,
 ```
 
 ```{r, echo=FALSE,warning=FALSE,message=FALSE}
-
 p1 <- 
 models %>% 
   filter(outcome.var=="credibility.pest.commitment.std") %>% 
   dwplot(dodge_size=0.2,
-                dot_args = list(size = 3),
-  whisker_args = list(size = 1),
+                dot_args = list(aes(color = term),size = 3),
+  whisker_args = list(aes(color = term),size = 0.7),
   vline = geom_vline(xintercept = 0, colour = "grey60", linetype = 2))%>% 
       relabel_predictors(c(independence.polit.efsa.std = "1",                       
                          independence.polit.efsa.iv.std = "2", 
@@ -950,14 +948,15 @@ models %>%
     scale_x_continuous(limits = c(-0.5,1.1),breaks = seq(-0.75,1,0.25))+
   theme_tufte()+
   ggtitle("Stability")+
-  theme(legend.position = "none")
+  scale_color_viridis_d()+
+theme(legend.position = "none")
 
 p2 <- 
 models %>% 
   filter(outcome.var=="credibility.pest.expertise.std") %>% 
   dwplot(dodge_size=0.2,
-                dot_args = list(size = 3),
-  whisker_args = list(size = 1),
+                dot_args = list(aes(color = term),size = 3),
+  whisker_args = list(aes(color = term),size = 0.7),
   vline = geom_vline(xintercept = 0, colour = "grey60", linetype = 2))%>% 
       relabel_predictors(c(independence.polit.efsa.std = "1",                       
                          independence.polit.efsa.iv.std = "2", 
@@ -965,14 +964,15 @@ models %>%
     scale_x_continuous(limits = c(-0.5,1.1),breaks = seq(-0.75,1,0.25))+
   theme_tufte()+
   ggtitle("Expert-based")+
+  scale_color_viridis_d()+
   theme(legend.position = "none")
 
 p3 <- 
 models %>% 
   filter(outcome.var=="credibility.pest.considerations.std") %>% 
   dwplot(dodge_size=0.2,
-         dot_args = list(size = 3),
-  whisker_args = list(size = 1),
+                dot_args = list(aes(color = term),size = 3),
+  whisker_args = list(aes(color = term),size = 0.7),
   vline = geom_vline(xintercept = 0, colour = "grey60", linetype = 2)) %>% 
       relabel_predictors(c(independence.polit.efsa.std = "1",                       
                          independence.polit.efsa.iv.std = "2", 
@@ -980,7 +980,8 @@ models %>%
     scale_x_continuous(limits = c(-0.5,1.1),breaks = seq(-0.75,1,0.25))+
   theme_tufte()+
   ggtitle("Non-interference")+
-  theme(legend.position = "none")
+  scale_color_viridis_d()+
+theme(legend.position = "none")
 
 
 ggarrange(p1,p2,p3,
@@ -1132,22 +1133,22 @@ ggarrange(p1,p2,p3,
 
 In relation to the approve outcome, Controlling for the other covariates, a one standard deviation increase in support for pesticides, is associated with `r tmod.commitment.2 %>% sjstats::std_beta() %>% filter(term=="supports.pesticides") %>% .[,"std.estimate"] %>% round(2)` standard deviations in the time-consistency dimension (compared to `r tmod.commitment.2 %>% sjstats::std_beta() %>% filter(term=="independence.polit.efsa") %>% .[,"std.estimate"] %>% round(2)` of perceived independence), `r tmod.considerations.2 %>% sjstats::std_beta() %>% filter(term=="supports.pesticides") %>% .[,"std.estimate"] %>% round(2)` standard deviations in the  non-interference dimension dimension (compared with `r tmod.considerations.2 %>% sjstats::std_beta() %>% filter(term=="independence.polit.efsa") %>% .[,"std.estimate"] %>% round(2)`), and  `r tmod.expertise.2 %>% sjstats::std_beta() %>% filter(term=="supports.pesticides") %>% .[,"std.estimate"] %>% round(2)` standard deviations in the expertise-based dimension (compared with only `r tmod.expertise.2 %>% sjstats::std_beta() %>% filter(term=="independence.polit.efsa") %>% .[,"std.estimate"] %>% round(2)`). Hence, when EFSA finds a low risk associated with the use of a pesticide, prior beliefs plays an important role in shaping the perceived credibility of this outcome. In particular, in relation to the expertise-based quality dimension, it much more influential than the perceived credibility of the agency.  
 
-```{r, echo=FALSE,warning=FALSE,message=FALSE}
+
+```{r, echo=FALSE,warning=FALSE,message=FALSE,fig.height=3,fig.width=8}
 
 efsa_00.t1 <- efsa_00.t1 %>%
   mutate(supports.pesticides.std = scale(supports.pesticides))
 
-models <- 
+models.approve <- 
   efsa_00.t1 %>% 
   gather("outcome.var","value",c("credibility.pest.considerations.std", 
                                     "credibility.pest.expertise.std", 
                                     "credibility.pest.commitment.std")) %>% 
-  group_by(ban.pesticide,
-           outcome.var) %>% 
+  group_by(outcome.var) %>% 
   do(fit = lm(
   value ~
     independence.polit.efsa.std +
-    supports.pesticides.std +
+    supports.pesticides.std*ban.pesticide +
     trust.eu.commission +
     trust.eu.parliament +
     trust.eu.council +
@@ -1155,7 +1156,33 @@ models <-
     informed.efsa,
   data = .)) %>%
   tidy(fit) %>% 
-  filter(term=="supports.pesticides.std") %>% 
+  filter(term == "supports.pesticides.std") %>% 
+  mutate(ban.pesticide = 0)
+
+
+models.ban <- 
+  efsa_00.t1 %>% 
+  gather("outcome.var","value",c("credibility.pest.considerations.std", 
+                                    "credibility.pest.expertise.std", 
+                                    "credibility.pest.commitment.std")) %>% 
+  group_by(outcome.var) %>% 
+  do(fit = lm(
+  value ~
+    independence.polit.efsa.std +
+    supports.pesticides.std*approve.pesticide +
+    trust.eu.commission +
+    trust.eu.parliament +
+    trust.eu.council +
+    affect.decisions.efsa +
+    informed.efsa,
+  data = .)) %>%
+  tidy(fit) %>% 
+  filter(term == "supports.pesticides.std") %>% 
+  mutate(ban.pesticide = 1)
+
+
+models <- rbind(models.approve,
+                models.ban) %>% 
   mutate(term = term %>% Recode("'supports.pesticides.std'=''"),
          model = ifelse(ban.pesticide==1,"Ban","Approve"))
 
@@ -1198,8 +1225,8 @@ models %>%
     guide = guide_legend(reverse=TRUE))+
   theme_tufte()+
   ggtitle("Non interference")+
-    theme(legend.position = c(0.8, 0.2),
-        legend.background = element_rect(size=0.5, linetype="solid"))
+    theme(legend.position = c(0.8, 0.8),
+        legend.background = element_rect(size=0.5, linetype="solid",color = "gray75"))
 
 
 
@@ -1210,12 +1237,9 @@ ggarrange(p1,p2,p3,
 
 In sum, our observational analyses suggest that perceptions of independence are associated with greater credibility. While the effect is fairly strong with respect to the non-interference dimension of credibility, for the other two dimensions of credibility, the effect is significant, yet quite moderate. At the same time, stakeholders’ pre-determined perceptions play an important, *and perhaps even greater role in shaping regulatory credibility*, and mainly in terms of the perceived impartiality and expertise-based quality of regulatory outputs.
 
-<br>
+In other models reported in the supplementary appendix, we further exmaine the robustness of our findings by excluding participants who did not answer correctly the comprehension question and participants who are not familiar with EFSA, and including the first item in the expert based dimension, instead of the non-interference dimension. In these analyses, the main findings remain largely intact.[^footnote_robust.1]    
 
-
-
-
-[## TBA – robustness checks, reported in the supplementary appendix ##]
+[^footnote_robust.1]: When excluding those who did not pass the comprehension task, the effect of perceived independence on Expert based is smaller and marginally significant (p = .11); When excluding those who are not familiar with EFSA, the interaction between support for pesticide and ban pesticide in relation to stability is smaller and marginally significant (p = .11); When moving the first item, the relations between independence and non-interference become stronger and more significant.
 
 <br>
 
@@ -1245,3 +1269,67 @@ How can this be mitigated? First, it is clear that it cannot be solely mitigated
 
 # REFERENCES
 
+
+
+## tests
+
+
+```{r, fig.width=9,echo=FALSE,warning=FALSE,message=FALSE}
+
+tmod.considerations.12
+
+p1 <- 
+  efsa_00.t1 %>% 
+  ggplot(aes(supports.pesticides,
+             credibility.pest.commitment,color = factor(ban.pesticide)))+
+  geom_smooth(method="lm")+
+  geom_jitter(width = 0.1,height = 0.1,size=1)+
+  scale_x_continuous(name="support for pesticides",breaks=-5:5)+
+  scale_y_continuous(name = "Policy stability",breaks=-5:5,limits = c(-5.5,5))+
+  theme_tufte()+
+  #stat_cor(method = "pearson", label.x = 3, label.y = 30)+
+  labs(title = "",
+              subtitle = "",
+              caption = "")+
+  theme(
+  plot.caption = element_text(hjust = 0)
+  )
+
+p2 <- efsa_00.t1 %>% 
+  ggplot(aes(independence.polit.efsa,
+             credibility.pest.expertise,color = factor(ban.pesticide)))+
+  geom_smooth(method="lm")+
+  geom_jitter(width = 0.1,height = 0.1,size=1)+
+  scale_x_continuous(name="support for pesticides",breaks=-5:5)+
+  scale_y_continuous(name = "Expert-based quality",breaks=-5:5,limits = c(-5.5,5))+
+  theme_tufte()+
+  labs(title = "",
+              subtitle = "",
+              caption = "")+
+  theme(
+  plot.caption = element_text(hjust = 0)
+  )
+
+p3 <- efsa_00.t1 %>% 
+  ggplot(aes(supports.pesticides,
+             credibility.pest.considerations,color = factor(ban.pesticide)))+
+  geom_smooth(method="lm")+
+  geom_jitter(width = 0.1,height = 0.1,size=1)+
+  scale_x_continuous(name="support for pesticides",breaks=-5:5)+
+  scale_y_continuous(name = "Political non-interference",breaks=-5:5,limits = c(-5.5,5))+
+  theme_tufte()+
+  labs(title = "",
+              subtitle = "",
+              caption = "")+
+  theme(
+  plot.caption = element_text(hjust = 0)
+  )
+
+
+
+
+
+
+ggarrange(p1,p2,p3,
+          ncol = 3,nrow = 1)
+```
