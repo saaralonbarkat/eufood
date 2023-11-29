@@ -1,0 +1,791 @@
+---
+title: "Independent Agencies, Credible Policies? The Role of Prior Beliefs in Shaping Stakeholder Perceptions of Credibility in a Contested Environment"
+subtitle: "Paper outputs - replication materials"
+author: '**Saar Alon-Barkat**, **Madalina Busuioc**'
+date: last-modified
+format:
+  html: 
+    self-contained: true
+    page-layout: full
+    code-fold: true
+    toc: true
+    toc-location: left
+execute:
+  message: false
+  warning: false
+---
+
+
+<br>
+
+Draft, last edited at `r Sys.Date()`.
+
+
+```{r}
+library(sjPlot)
+library(tidyverse)
+library(car)
+library(reshape2)
+library(viridis)
+library(ggthemes)
+library(corrr)
+library(kableExtra)
+library(dotwhisker)
+library(sjmisc)
+library(interflex)
+library(effsize)
+library(broom)
+library(sjstats)
+library(stargazer)
+library(AER)
+library(ggpubr)
+library(ggthemes)
+library(lavaan)
+library(lavaanExtra)
+```
+
+
+
+```{r , include=FALSE, echo=FALSE,warning=FALSE,message=FALSE}
+
+efsa_jepp <- read_csv("efsa_jepp.csv")
+
+```
+
+
+```{r}
+efsa_jepp %>% 
+  glimpse()
+```
+
+
+<br>
+
+
+## Figure 1
+
+`r figure.x=figure.x+1` 
+**Figure `r figure.x`: Distributions of perceived policy credibility and independence**
+
+
+```{r, echo=FALSE, warning=FALSE, message=F,fig.width=8}
+p1 <- efsa_jepp_filtered %>%
+  drop_na(independence.polit.efsa) %>%
+  select(credibility.pest.index,
+         credibility.pest.commitment_q6:credibility.pest.expertise_q145,
+         independence.polit.efsa,
+         supports.pesticides,
+         ban.pesticide.lab) %>%
+  gather("key", "value", -ban.pesticide.lab) %>%
+  mutate(
+    key = key %>% car::recode(
+      "'credibility.pest.commitment_q6' = '3. Stability'; 
+      'credibility.pest.expertise_q145' = '2. Expert-based';  
+      'credibility.pest.noninterference_q23' = '1. Non-interference';
+      'credibility.pest.index' = '4. Credibility combined';
+      'independence.polit.efsa' = '5. Perceived independence';
+      'supports.pesticides' = '6. Support for pesticides'"
+    )
+  ) %>%
+  
+  ggplot(aes(
+    x = key,
+    y = value)) +
+  geom_boxplot(width = 0.3) +
+  stat_summary(
+    fun.data = mean_cl_normal,
+    geom = "errorbar",
+    fun.args = list(conf.int = 0.95),
+    colour = "red",
+    alpha = 0.5,
+    width = 0.1,
+    size = 1,
+    position = position_dodge(0.5)
+  ) +
+  stat_summary(
+    fun.y = mean,
+    geom = "point",
+    colour = "red",
+    alpha = 0.5,
+    size = 2,
+    position = position_dodge(0.5)
+  ) +
+  scale_y_continuous(limits = c(-5, 5), breaks = -5:5) +
+  scale_x_discrete(
+    name = "",
+    labels = c("Non-interference",
+               "Expert-based",
+               "Stability",
+               "Credibility\ncombined scale",
+               "Perceived\nindependence",
+               "Support for pesticides")
+  ) +
+  ylab("") +
+  theme_tufte() +
+  labs() +
+  theme(plot.caption = element_text(hjust = 0))
+
+p1
+
+```
+
+
+
+
+## Table 1
+
+
+```{r}
+t1 <- efsa_jepp_filtered %>% 
+  dplyr::select(credibility.pest.noninterference_q23,
+                credibility.pest.expertise_q145,
+                credibility.pest.commitment_q6,
+                credibility.pest.index,
+                independence.polit.efsa,
+                supports.pesticides) %>%
+  pivot_longer(cols = credibility.pest.index:supports.pesticides) %>% 
+  drop_na(value) %>% 
+  mutate(name = name %>% car::recode("'credibility.pest.noninterference_q23' = '1. Non-interference';
+      'credibility.pest.expertise_q145' = '2. Expert-based';  
+        'credibility.pest.commitment_q6' = '3. Stability'; 
+      'credibility.pest.index' = '4. Credibility combined';
+      'independence.polit.efsa' = '5. Perceived independence';
+      'supports.pesticides' = '6. Support for pesticides'"))
+
+t1 %>%   group_by(name) %>% 
+  dplyr::summarise(n = n(),
+            Median = median(value,na.rm = T) %>% round(3),
+            Mean = mean(value,na.rm = T) %>% round(3),
+            SD = sd(value,na.rm = T) %>% round(3),
+            Min = min(value,na.rm = T) %>% round(3),
+            Max = max(value,na.rm = T) %>% round(3)) %>% 
+    kableExtra::kable() %>% 
+    kableExtra::kable_styling(bootstrap_options = c("condensed"),
+                full_width = F,
+                position = "left")
+
+```
+
+```{r}
+efsa_jepp %>% 
+  dplyr::select(credibility.pest.noninterference_q23,
+                credibility.pest.expertise_q145,
+         credibility.pest.commitment_q6,
+         credibility.pest.index,
+         independence.polit.efsa,
+         supports.pesticides) %>% 
+  
+  sjPlot::tab_corr(triangle = "lower",
+                   show.p = F,
+                   fade.ns = F,
+                   var.labels = 1:6)
+```
+
+<br>
+
+## CFA Table 2
+
+```{r}
+cfa.model.1factor_01 <-
+  'policy.credibility =~ credibility.pest.q1 +  credibility.pest.q2 + credibility.pest.q3 + credibility.pest.q4 + credibility.pest.q5 + credibility.pest.q6 '
+
+fit.1factor_01 <- cfa(
+  cfa.model.1factor_01,
+  std.lv = TRUE,
+  missing = "fiml",
+  data = efsa_jepp_filtered
+)
+
+
+cfa.model.3factor_02 <-
+  'non.interference =~ credibility.pest.q2 + credibility.pest.q3
+    expert.based  =~ credibility.pest.q1 +  credibility.pest.q4 + credibility.pest.q5 
+    stability   =~ credibility.pest.q6 '
+
+fit.3factor_02 <- cfa(
+  cfa.model.3factor_02,
+  std.lv = TRUE,
+  missing = "fiml",
+  data = efsa_jepp_filtered
+)
+```
+
+```{r}
+parameterEstimates(fit.1factor_01, standardized=TRUE) %>% 
+  filter(op == "=~") %>% 
+  mutate(Beta = str_c(std.all %>% round(3)," (",pvalue %>% round(3),")")) %>% 
+    select('Latent Factor'=lhs,  
+           'Indicator' = rhs,
+           'Estimate std.' = Beta) %>% 
+  kableExtra::kable(digits = 3) %>% 
+    kableExtra::kable_styling(bootstrap_options = c("condensed"),
+                full_width = F,
+                position = "left")%>%
+  kableExtra::collapse_rows(columns = 1, valign = "top")
+```
+
+
+```{r}
+
+fitmeasures(fit.1factor_01, c('chisq','df','pvalue','cfi','tli', 'rmsea', 'rmsea.ci.upper','rmsea.ci.lower', 'srmr')) %>% 
+  broom::tidy() %>% 
+  pivot_wider(names_from = names,values_from = x) %>% 
+  mutate(chisq_01 = str_c(chisq %>% round(3)," [","df=",df,", p<.001",pvalue %>% round(3),"]"),
+         rmsea_01 = str_c(rmsea %>% round(3)," CI[", rmsea.ci.lower %>% round(3),",",rmsea.ci.upper %>% round(3),"]"),
+         cfi = cfi %>% round(3),
+         tli = tli %>% round(3),
+         srmr = srmr %>% round(3),
+         n = nrow(efsa_00.t1)) %>%
+  select('N' = n,
+          'Chi-sq' = chisq_01,
+         'CFI' = cfi,
+         'TLI' = tli,
+         'RMSEA' = rmsea_01,
+         'SRMR' = srmr) %>% 
+  t() %>% 
+  kableExtra::kable()
+```
+
+
+```{r}
+parameterEstimates(fit.3factor_02, standardized=TRUE) %>% 
+  filter(op == "=~") %>% 
+  mutate(Beta = str_c(std.all %>% round(3)," (",pvalue %>% round(3),")")) %>% 
+    select('Latent Factor'=lhs,  
+           'Indicator' = rhs,
+           'Estimate std.' = Beta) %>% 
+  kableExtra::kable(digits = 3) %>% 
+    kableExtra::kable_styling(bootstrap_options = c("condensed"),
+                full_width = F,
+                position = "left")%>%
+  kableExtra::collapse_rows(columns = 1, valign = "top")
+```
+
+```{r}
+
+fitmeasures(fit.3factor_02, c('chisq','df','pvalue','cfi','tli', 'rmsea', 'rmsea.ci.upper','rmsea.ci.lower', 'srmr')) %>% 
+  broom::tidy() %>% 
+  pivot_wider(names_from = names,values_from = x) %>% 
+  mutate(chisq_01 = str_c(chisq %>% round(3)," [","df=",df,", p=",pvalue %>% round(3),"]"),
+         rmsea_01 = str_c(rmsea %>% round(3)," CI[", rmsea.ci.lower %>% round(3),",",rmsea.ci.upper %>% round(3),"]"),
+         cfi = cfi %>% round(3),
+         tli = tli %>% round(3),
+         srmr = srmr %>% round(3),
+         n = nrow(efsa_00.t1)) %>%
+  select('N' = n,
+          'Chi-sq' = chisq_01,
+         'CFI' = cfi,
+         'TLI' = tli,
+         'RMSEA' = rmsea_01,
+         'SRMR' = srmr) %>% 
+  t() %>% 
+  kableExtra::kable()
+```
+
+## Correlational regression - Table 3
+
+```{r}
+tmod.considerations.null <- lm(credibility.pest.noninterference_q23 ~
+                                 1,
+                               data = efsa_jepp_filtered)
+
+
+tmod.considerations.1 <- update(tmod.considerations.null, . ~ . +
+                                  independence.polit.efsa)
+tmod.considerations.2 <- update(
+  tmod.considerations.null,
+  . ~ . +
+    independence.polit.efsa +
+    ban.pesticide +
+    trust.eu.commission +
+    trust.eu.parliament +
+    trust.eu.council +
+    affect.decisions.efsa +
+    informed.efsa
+)
+
+
+tmod.expertise.null <- update(tmod.considerations.null, credibility.pest.expertise_q145 ~ . )
+tmod.expertise.1 <- update(tmod.considerations.1, credibility.pest.expertise_q145 ~ . )
+tmod.expertise.2 <- update(tmod.considerations.2, credibility.pest.expertise_q145 ~ . )
+
+tmod.commitment.null <- update(tmod.considerations.null, credibility.pest.commitment_q6 ~ . )
+tmod.commitment.1 <- update(tmod.considerations.1, credibility.pest.commitment_q6 ~ . )
+tmod.commitment.2 <- update(tmod.considerations.2, credibility.pest.commitment_q6 ~ . )
+
+
+tmod.credibility.null <- update(tmod.considerations.null, credibility.pest.index ~ . )
+tmod.credibility.1 <- update(tmod.considerations.1, credibility.pest.index ~ . )
+tmod.credibility.2 <- update(tmod.considerations.2, credibility.pest.index ~ . )
+
+
+```
+
+```{r}
+control.vars <- c(
+  "ban.pesticide",
+  "trust.eu.commission",
+  "trust.eu.parliament",
+  "trust.eu.council",
+  "female",
+  "affect.decisions.efsa",
+  "informed.efsa",
+  "supports.pesticides",
+  "organization.type.short"
+)
+
+sjPlot::tab_model(tmod.considerations.1,
+                  tmod.considerations.2,
+                  tmod.expertise.1,
+                  tmod.expertise.2,
+                  tmod.commitment.1,
+                  tmod.commitment.2,
+                  tmod.credibility.1,
+                  tmod.credibility.2,
+                  show.ci = F,
+                  show.se = T,
+                  collapse.se = T,
+                  emph.p = F,
+                  rm.terms = control.vars,
+                  digits = 3,
+                  digits.p = 2,
+                  string.p = "p-value",
+                  string.est = " ",
+                  pred.labels = c("Constant","Perceived independence"),
+                  order.terms = c(2,1),
+                  dv.labels = rep(c("Non-interference","Expert-based","Stability","Credibility combined"),each=2)
+)
+```
+
+
+
+```{r}
+control.vars <- c(
+  "ban.pesticide",
+  "trust.eu.commission",
+  "trust.eu.parliament",
+  "trust.eu.council",
+  "female",
+  "affect.decisions.efsa",
+  "informed.efsa",
+  "supports.pesticides",
+  "organization.type.short"
+)
+
+sjPlot::tab_model(tmod.credibility.1,
+                  tmod.credibility.2,
+                  tmod.considerations.1,
+                  tmod.considerations.2,
+                  tmod.expertise.1,
+                  tmod.expertise.2,
+                  tmod.commitment.1,
+                  tmod.commitment.2,
+                  show.std = T,
+                  show.est = F,
+                  emph.p = F,
+                  rm.terms = control.vars,
+                  digits = 2,
+                  string.p = "p-value",
+                  string.est = " ",
+                  pred.labels = c("Constant","Perceived independence"),
+                  order.terms = c(2,1),
+                  dv.labels = rep(c("Credibility (all)","Non-interference","Expert-based","Stability"),each=2)
+)
+```
+
+
+## Figure 2
+
+```{r}
+p1 <- efsa_jepp_filtered %>% 
+  drop_na(independence.polit.efsa) %>% 
+  ggplot(aes(x=independence.polit.efsa,fill=independence.treatment.lab)) +
+  geom_bar(width = 0.8,alpha=0.8,color="white",position = position_dodge())+
+  scale_x_continuous(name="",limits = c(-6,6),breaks = c(-5,0,5))+
+  scale_fill_viridis_d(name = "Independence condition")+
+  theme_tufte()  +
+    labs(x="",y="Frequency")+
+  theme(plot.caption = element_text(hjust = 0))+
+    theme(legend.position = c(0.80, 0.85),
+        legend.background = element_rect(size=0.5, linetype="solid",color = "gray75"))
+
+p1
+```
+
+
+
+## Table 4
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+
+tmod1.1stage.1 <- lm(independence.polit.efsa~ 
+                     independence.treatment,
+                data=efsa_jepp_filtered)
+
+tmod1.2stage.1 <- tmod1.1stage.1 %>% update(.~.+
+                     ban.pesticide+
+                     trust.eu.commission+
+                     trust.eu.parliament+
+                     trust.eu.council+
+                     affect.decisions.efsa+
+                     informed.efsa)
+
+
+tmod.rf.considerations.1 <- tmod1.1stage.1 %>% update(credibility.pest.noninterference_q23~.)
+tmod.rf.considerations.2 <- tmod1.2stage.1 %>% update(credibility.pest.noninterference_q23~.)
+
+tmod.rf.expertise.1 <- update(tmod1.1stage.1, credibility.pest.expertise_q145 ~ . ) 
+tmod.rf.expertise.2 <- update(tmod1.2stage.1, credibility.pest.expertise_q145 ~ . ) 
+
+tmod.rf.commitment.1 <- update(tmod1.1stage.1, credibility.pest.commitment_q6 ~ . ) 
+tmod.rf.commitment.2 <- update(tmod1.2stage.1, credibility.pest.commitment_q6 ~ . ) 
+
+tmod.rf.credibility.1 <- update(tmod1.1stage.1, credibility.pest.index ~ . ) 
+tmod.rf.credibility.2 <- update(tmod1.2stage.1, credibility.pest.index ~ . ) 
+
+
+ 
+```
+
+
+
+```{r}
+control.vars <- c(
+  "ban.pesticide",
+  "trust.eu.commission",
+  "trust.eu.parliament",
+  "trust.eu.council",
+  "female",
+  "affect.decisions.efsa",
+  "informed.efsa",
+  "supports.pesticides",
+  "organization.type.short"
+)
+
+sjPlot::tab_model(tmod1.1stage.1,tmod1.2stage.1,
+                  show.ci = F,
+                  show.se = T,
+                  collapse.se = T,
+                  emph.p = F,
+                  rm.terms = control.vars,
+                  string.est = " ",
+                  digits = 3,
+                  digits.p = 2,
+                  pred.labels = c("Constant","Independence treatment"),
+                  order.terms = c(2,1),
+                  string.p = "p-value",
+                  dv.labels = rep(c("Perceived independence"),each=2))
+```
+
+
+
+```{r}
+control.vars <- c(
+  "ban.pesticide",
+  "trust.eu.commission",
+  "trust.eu.parliament",
+  "trust.eu.council",
+  "female",
+  "affect.decisions.efsa",
+  "informed.efsa",
+  "supports.pesticides",
+  "organization.type.short"
+)
+
+sjPlot::tab_model(tmod.rf.considerations.1,tmod.rf.considerations.2,
+                  tmod.rf.expertise.1,tmod.rf.expertise.2,
+                  tmod.rf.commitment.1,tmod.rf.commitment.2,
+                  tmod.rf.credibility.1,tmod.rf.credibility.2,
+                  show.ci = F,
+                  show.se = T,
+                  collapse.se = T,
+                  emph.p = F,
+                  rm.terms = control.vars,
+                  string.est = " ",
+                  digits = 3,
+                  digits.p = 2,
+                  pred.labels = c("Constant","Independence treatment"),
+                  order.terms = c(2,1),
+                  string.p = "p-value",
+                  dv.labels = rep(c("Non-interference","Expert-based","Stability","Credibility combined"),each=2))
+```
+
+
+
+## Figure 3
+
+
+```{r, echo=FALSE, warning=FALSE, message=F, fig.width=6}
+p1 <- efsa_jepp %>%
+  drop_na(ban.pesticide) %>%
+  select(credibility.pest.index,
+         credibility.pest.commitment_q6:credibility.pest.expertise_q145,
+         ban.pesticide.lab) %>%
+  gather("key", "value", -ban.pesticide.lab) %>%
+  mutate(
+    key = key %>% car::recode(
+      "'credibility.pest.commitment_q6' = '3. Stability'; 
+      'credibility.pest.expertise_q145' = '2. Expert-based';  
+      'credibility.pest.noninterference_q23' = '1. Non-interference';
+      'credibility.pest.index' = '4. Credibility combined';
+      'independence.polit.efsa' = '5. Perceived independence';
+      'supports.pesticides' = '6. Support for pesticides'"
+    )
+  ) %>%
+
+  
+  
+  ggplot(aes(
+    x = key,
+    y = value,
+    color = ban.pesticide.lab,
+    shape = ban.pesticide.lab
+  )) +
+  geom_boxplot(width = 0.5) +
+  stat_summary(
+    fun.data = mean_cl_normal,
+    geom = "errorbar",
+    fun.args = list(conf.int = 0.95),
+    colour = "red",
+    alpha = 0.5,
+    width = 0.1,
+    size = 1,
+    position = position_dodge(0.5)
+  ) +
+  stat_summary(
+    fun.y = mean,
+    geom = "point",
+    colour = "red",
+    alpha = 0.5,
+    size = 2,
+    position = position_dodge(0.5)
+  ) +
+  scale_y_continuous(limits = c(-5, 5), breaks = -5:5) +
+  scale_x_discrete(
+    name = "",
+    labels = c("Non-interference",
+               "Expert-based",
+               "Stability",
+               "Credibility\ncombined scale")
+  ) +
+  scale_shape_manual(
+    name = "Regulatory outcome",
+    values = c(19, 1),
+    labels = c("Approve pesticide", "Ban pesticide")
+  ) +
+  scale_color_manual(
+    name = "Regulatory outcome",
+    values = c("gray10", "gray60"),
+    labels = c("Approve pesticide", "Ban pesticide")
+  ) +
+  ylab("") +
+  theme_tufte() +
+  theme(plot.caption = element_text(hjust = 0),
+        legend.background = element_rect(size=0.5, linetype="solid",color = "gray75"))
+
+p1
+
+
+```
+
+
+## Figure 4
+
+**Figure 4: Prior beliefs regarding pesticides across stakeholder groups**
+```{r, echo=FALSE, warning=FALSE, message=F, fig.width=4}
+
+p1 <- efsa_jepp %>%
+  drop_na(organization.type.short) %>% 
+  mutate(organization.type.short.t = Recode(organization.type.short,"'0-other'='3-other';'2-ngo'='0-ngo'")) %>% 
+  ggplot(aes(x=organization.type.short.t,y=supports.pesticides))+
+  geom_boxplot(width = 0.5)+
+      stat_summary(fun.data = mean_cl_normal, fun.args=list(conf.int=0.95), geom = "errorbar", colour = "red",alpha=0.5,width=0.1,size=1,position=position_dodge(0.5)) + 
+  stat_summary(fun.y = mean, geom = "point", colour = "red",alpha=0.5,size=2,position=position_dodge(0.5))+
+  scale_y_continuous(name="Support for pesticides",limits = c(-5,5),breaks=-5:5)+
+  scale_x_discrete(name="",labels = c("NGOs\n(n=65)","Industry\n(n=106)","Other\n(n=99)"))+
+  theme_tufte()+
+  theme(
+  plot.caption = element_text(hjust = 0)
+  )
+
+p1
+
+
+
+```
+
+
+
+## Table 5
+
+```{r}
+tmod.credibility.11 <- update(tmod.credibility.2, . ~ . + 
+                      supports.pesticides)
+tmod.credibility.12 <- update(tmod.credibility.2, . ~ . + 
+                      ban.pesticide*supports.pesticides)
+
+tmod.considerations.11 <- update(tmod.considerations.2, . ~ . + 
+                      supports.pesticides)
+tmod.considerations.12 <- update(tmod.considerations.2, . ~ . + 
+                      ban.pesticide*supports.pesticides)
+
+tmod.expertise.11 <- update(tmod.expertise.2, . ~ . + 
+                      supports.pesticides)
+tmod.expertise.12 <- update(tmod.expertise.2, . ~ . + 
+                      ban.pesticide*supports.pesticides)
+
+tmod.commitment.11 <- update(tmod.commitment.2, . ~ . + 
+                      supports.pesticides)
+tmod.commitment.12 <- update(tmod.commitment.2, . ~ . + 
+                      ban.pesticide*supports.pesticides)
+
+```
+
+```{r}
+control.vars_2 <- c(
+  "trust.eu.commission",
+  "trust.eu.parliament",
+  "trust.eu.council",
+  "female",
+  "affect.decisions.efsa",
+  "informed.efsa",
+  "organization.type.short"
+)
+
+sjPlot::tab_model(tmod.considerations.11,tmod.considerations.12,
+                  tmod.expertise.11,tmod.expertise.12,
+                  tmod.commitment.11,tmod.commitment.12,
+                  tmod.credibility.11,tmod.credibility.12,
+                  show.ci = F,
+                  show.se = T,
+                  collapse.se = T,
+                  emph.p = F,
+                  rm.terms = control.vars_2,
+                  digits = 3,
+                  digits.p = 2,
+                  string.p = "p-value",
+                  string.est = " ",
+                  pred.labels = c("Constant","Perceived independence","Ban pesticide (0=approve)","Supports pesticides","Supports pesticides × Ban pesticide"),
+                  order.terms = c(2:5,1),
+                  dv.labels = rep(c("Non-interference","Expert-based","Stability","Credibility combined"),each=2))
+        
+
+```
+
+
+## Figure 5
+
+**Figure 5: Interaction between ban opinion and support for pesticides**
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+df.predict <- data.frame(
+  supports.pesticides = rep(-5:5,2),
+  ban.pesticide = rep(0:1,each=11),
+  independence.polit.efsa = rep(mean(efsa_00.t1$independence.polit.efsa,na.rm = T),22),
+  trust.eu.commission = rep(mean(efsa_00.t1$trust.eu.commission,na.rm = T),22),
+  trust.eu.parliament = rep(mean(efsa_00.t1$trust.eu.parliament,na.rm = T),22),
+  trust.eu.council = rep(mean(efsa_00.t1$trust.eu.council,na.rm = T),22),
+  affect.decisions.efsa = rep(mean(efsa_00.t1$affect.decisions.efsa,na.rm = T),22),
+  informed.efsa = rep(mean(efsa_00.t1$informed.efsa,na.rm = T),22)
+) 
+
+df.predict.credibility <- predict(tmod.credibility.12,df.predict,interval = 'confidence') %>% data.frame() %>% mutate(outcome.var = "credibility.pest.index") %>% cbind(df.predict)
+
+df.predict.commitment <- predict(tmod.commitment.12,df.predict,interval = 'confidence') %>% data.frame() %>% mutate(outcome.var = "credibility.pest.commitment_q6") %>% cbind(df.predict)
+
+df.predict.expertise <- predict(tmod.expertise.12,df.predict,interval = 'confidence') %>% data.frame() %>% mutate(outcome.var = "credibility.pest.expertise_q145") %>% cbind(df.predict)
+
+df.predict.considerations <- predict(tmod.considerations.12,df.predict,interval = 'confidence') %>% data.frame() %>% mutate(outcome.var = "credibility.pest.noninterference_q23") %>% cbind(df.predict)
+
+df.predict.1 <- 
+  rbind(df.predict.credibility,
+        df.predict.commitment,
+        df.predict.expertise,
+        df.predict.considerations)
+
+```
+
+```{r, fig.width=10,echo=FALSE,warning=FALSE,message=FALSE}
+p0 <- df.predict.1 %>% 
+  filter(outcome.var == "credibility.pest.noninterference_q23") %>% 
+  ggplot(aes(x = supports.pesticides, y = fit,color = factor(ban.pesticide))) +
+  geom_line(size = 1) + 
+geom_line(aes(x = supports.pesticides, y = lwr), 
+            linetype = 2) +
+  geom_line(aes(x = supports.pesticides, y = upr), 
+            linetype = 2)+
+  scale_y_continuous(limits = c(-3,5),breaks = -3:5)+
+  scale_x_continuous(name = "Support for pesticides",limits = c(-5,5),breaks = c(-5,0,5))+
+  scale_color_manual(name="Regulatory outcome",
+    values = c("gray1","gray70"),
+    guide = guide_legend(reverse=TRUE))+
+    labs(title = "Non-interference",y="")+
+  theme_tufte()+
+  theme(legend.position = "none")
+
+p1 <- df.predict.1 %>% 
+  filter(outcome.var == "credibility.pest.expertise_q145") %>% 
+  ggplot(aes(x = supports.pesticides, y = fit,color = factor(ban.pesticide))) +
+  geom_line(size = 1) + 
+geom_line(aes(x = supports.pesticides, y = lwr), 
+            linetype = 2) +
+  geom_line(aes(x = supports.pesticides, y = upr), 
+            linetype = 2)+
+  scale_y_continuous(limits = c(-3,5),breaks = -3:5)+
+  scale_x_continuous(name = "Support for pesticides",limits = c(-5,5),breaks = c(-5,0,5))+
+  scale_color_manual(name="Regulatory outcome",
+    values = c("gray1","gray70"),
+    guide = guide_legend(reverse=TRUE))+
+    labs(title = "Expert-based",y="")+
+  theme_tufte()+
+  theme(legend.position = "none")
+
+
+p2 <- df.predict.1 %>% 
+  filter(outcome.var == "credibility.pest.commitment_q6") %>% 
+  ggplot(aes(x = supports.pesticides, y = fit,color = factor(ban.pesticide))) +
+  geom_line(size = 1) + 
+geom_line(aes(x = supports.pesticides, y = lwr), 
+            linetype = 2) +
+  geom_line(aes(x = supports.pesticides, y = upr), 
+            linetype = 2)+
+  scale_y_continuous(limits = c(-3,5),breaks = -3:5)+
+  scale_x_continuous(name = "Support for pesticides",limits = c(-5,5),breaks = c(-5,0,5))+
+  scale_color_manual(name="Regulatory outcome",
+    values = c("gray1","gray70"),
+    guide = guide_legend(reverse=TRUE))+
+  labs(title = "Stability",y="")+
+  theme_tufte()+
+  theme(legend.position = "none")
+
+p3 <- df.predict.1 %>% 
+  filter(outcome.var == "credibility.pest.index") %>% 
+  ggplot(aes(x = supports.pesticides, y = fit,color = factor(ban.pesticide))) +
+  geom_line(size = 1) + 
+geom_line(aes(x = supports.pesticides, y = lwr), 
+            linetype = 2) +
+  geom_line(aes(x = supports.pesticides, y = upr), 
+            linetype = 2)+
+  scale_y_continuous(limits = c(-3,5),breaks = -3:5)+
+  scale_x_continuous(name = "Support for pesticides",limits = c(-5,5),breaks = c(-5,0,5))+
+  scale_color_manual(name="Outcome",
+    values = c("gray1","gray70"),
+    labels = c("Approve", "Ban"),
+    guide = guide_legend(reverse=TRUE))+
+      labs(title = "Credibility combined",y="")+
+  theme_tufte()+
+    theme(legend.position = c(0.75, 0.85),
+        legend.background = element_rect(size=0.5, linetype="solid",color = "gray75"),
+         legend.title = element_text(size = 12),
+  legend.text = element_text(size = 12))
+  
+
+
+p4 <- ggarrange(p0,p1,p2,p3,
+          ncol = 4,nrow = 1)
+
+p4
+
+```
+
+
